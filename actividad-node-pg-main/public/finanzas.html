@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finanzas Personales</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav>
+  <div class="logo">🐘 <span>Node</span> + pg</div>
+  <div class="nav-links">
+    <a href="/index.html">Inicio</a>
+    <a href="/finanzas.html" class="activo">Finanzas</a>
+    <a href="/clientes.html">Clientes</a>
+  </div>
+</nav>
+
+<div class="contenedor">
+
+  <div class="seccion-header">
+    <div>
+      <h2>📊 Finanzas personales</h2>
+      <p class="subtitulo">Conexión por <strong>configuración</strong> — <code>db/poolConfig.js</code> — endpoint <code>GET /finanzas</code></p>
+    </div>
+    <button class="btn btn-verde" onclick="cargarDatos()">🔄 Recargar</button>
+  </div>
+
+  <div id="contenido">
+    <div class="loading">Conectando a PostgreSQL...</div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  function mostrarToast(texto, tipo = 'ok') {
+    const el = document.getElementById('toast');
+    el.textContent = texto;
+    el.className = `toast ${tipo} visible`;
+    setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  function formatPesos(n) {
+    return '$' + Number(n).toLocaleString('es-CL');
+  }
+
+  async function cargarDatos() {
+    const contenido = document.getElementById('contenido');
+    contenido.innerHTML = '<div class="loading">Consultando base de datos...</div>';
+    try {
+      const res  = await fetch('/finanzas');
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || `Error ${res.status}`);
+      }
+      const data = await res.json();
+
+      if (data.length === 0) {
+        contenido.innerHTML = '<div class="empty"><div class="icon">📭</div><p>No hay registros en finanzas_personales.</p></div>';
+        return;
+      }
+
+      contenido.innerHTML = `
+        <div class="info-conexion">
+          🔌 Conectado via <strong>Pool por configuración</strong> &nbsp;|&nbsp; ${data.length} registros encontrados
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Me debe</th>
+              <th>Cuotas a cobrar</th>
+              <th>Le debo</th>
+              <th>Cuotas a pagar</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map(r => `
+              <tr>
+                <td><strong>${r.nombre}</strong></td>
+                <td class="${r.me_debe > 0 ? 'monto-positivo' : ''}">${formatPesos(r.me_debe)}</td>
+                <td>${r.cuotas_cobrar}</td>
+                <td class="${r.le_debo > 0 ? 'monto-negativo' : ''}">${formatPesos(r.le_debo)}</td>
+                <td>${r.cuotas_pagar}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+      mostrarToast(`${data.length} registros cargados desde PostgreSQL`, 'ok');
+
+    } catch (err) {
+      contenido.innerHTML = `
+        <div class="alerta alerta-error visible">
+          <span>❌</span>
+          <div>
+            <strong>Error al conectar con el servidor</strong><br>
+            <small>${err.message}</small>
+          </div>
+        </div>`;
+      mostrarToast(err.message, 'error');
+    }
+  }
+
+  cargarDatos();
+</script>
+</body>
+</html>

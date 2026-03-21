@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Node + pg — Módulo 7</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav>
+  <div class="logo">🐘 <span>Node</span> + pg</div>
+  <div class="nav-links">
+    <a href="/index.html" class="activo">Inicio</a>
+    <a href="/finanzas.html">Finanzas</a>
+    <a href="/clientes.html">Clientes</a>
+  </div>
+</nav>
+
+<div class="contenedor">
+  <div class="hero">
+    <span class="badge">Módulo 7 — Lección 1</span>
+    <h1>Conexión a PostgreSQL<br>con Node.js + pg</h1>
+    <p>Dos enfoques de conexión usando pool de conexiones con el paquete <code>pg</code>.</p>
+  </div>
+
+  <div class="cards-menu">
+    <a href="/finanzas.html" class="card-menu verde">
+      <div class="icon">📊</div>
+      <h3>Finanzas personales</h3>
+      <p>Conexión por <strong>configuración</strong><br>
+        <code>{ host, port, user, password, database }</code></p>
+      <span class="tag tag-verde">GET /finanzas → tabla</span>
+    </a>
+    <a href="/clientes.html" class="card-menu azul">
+      <div class="icon">👥</div>
+      <h3>Clientes</h3>
+      <p>Conexión por <strong>connection string</strong><br>
+        <code>postgresql://user:pass@host:port/db</code></p>
+      <span class="tag tag-azul">GET /clientes → lista</span>
+    </a>
+  </div>
+
+  <div class="panel">
+    <div class="panel-titulo">📋 Resumen de enfoques</div>
+    <table>
+      <thead>
+        <tr><th>Enfoque</th><th>Módulo de conexión</th><th>Endpoint</th><th>Vista frontend</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Pool por <strong>configuración</strong></td>
+          <td><code>db/poolConfig.js</code></td>
+          <td><code>GET /finanzas</code></td>
+          <td>Tabla HTML</td>
+        </tr>
+        <tr>
+          <td>Pool por <strong>connection string</strong></td>
+          <td><code>db/poolString.js</code></td>
+          <td><code>GET /clientes</code></td>
+          <td>Lista HTML</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

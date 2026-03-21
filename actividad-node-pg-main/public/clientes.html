@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clientes</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav>
+  <div class="logo">🐘 <span>Node</span> + pg</div>
+  <div class="nav-links">
+    <a href="/index.html">Inicio</a>
+    <a href="/finanzas.html">Finanzas</a>
+    <a href="/clientes.html" class="activo">Clientes</a>
+  </div>
+</nav>
+
+<div class="contenedor">
+
+  <div class="seccion-header">
+    <div>
+      <h2>👥 Clientes</h2>
+      <p class="subtitulo">Conexión por <strong>connection string</strong> — <code>db/poolString.js</code> — endpoint <code>GET /clientes</code></p>
+    </div>
+    <button class="btn btn-azul" onclick="cargarDatos()">🔄 Recargar</button>
+  </div>
+
+  <div id="contenido">
+    <div class="loading">Conectando a PostgreSQL...</div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  function mostrarToast(texto, tipo = 'ok') {
+    const el = document.getElementById('toast');
+    el.textContent = texto;
+    el.className = `toast ${tipo} visible`;
+    setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  async function cargarDatos() {
+    const contenido = document.getElementById('contenido');
+    contenido.innerHTML = '<div class="loading">Consultando base de datos...</div>';
+    try {
+      const res  = await fetch('/clientes');
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || `Error ${res.status}`);
+      }
+      const data = await res.json();
+
+      if (data.length === 0) {
+        contenido.innerHTML = '<div class="empty"><div class="icon">📭</div><p>No hay registros en clientes.</p></div>';
+        return;
+      }
+
+      const items = data.map(c => `
+        <li class="cliente-item">
+          <div class="cliente-avatar">${c.nombre.charAt(0).toUpperCase()}</div>
+          <div class="cliente-info">
+            <strong>${c.nombre}</strong>
+            <span>📧 ${c.email}</span>
+            <span>📞 ${c.telefono}</span>
+            <span>📍 ${c.ciudad}</span>
+          </div>
+          <div class="cliente-id">ID: ${c.id}</div>
+        </li>`).join('');
+
+      contenido.innerHTML = `
+        <div class="info-conexion">
+          🔌 Conectado via <strong>Pool por connection string</strong> &nbsp;|&nbsp; ${data.length} registros encontrados
+        </div>
+        <ul class="lista-clientes">${items}</ul>`;
+      mostrarToast(`${data.length} clientes cargados desde PostgreSQL`, 'ok');
+
+    } catch (err) {
+      contenido.innerHTML = `
+        <div class="alerta alerta-error visible">
+          <span>❌</span>
+          <div>
+            <strong>Error al conectar con el servidor</strong><br>
+            <small>${err.message}</small>
+          </div>
+        </div>`;
+      mostrarToast(err.message, 'error');
+    }
+  }
+
+  cargarDatos();
+</script>
+</body>
+</html>

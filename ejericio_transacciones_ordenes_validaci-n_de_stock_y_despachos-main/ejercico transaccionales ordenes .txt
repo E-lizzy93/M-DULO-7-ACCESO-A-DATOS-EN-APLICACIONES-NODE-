@@ -1,0 +1,21 @@
+ENTREGA MÓDULO 7: ACCESO A DATOS EN APLICACIONES NODE
+
+Actividad
+Transacciones con Node + pg: Órdenes de compra y stock
+
+REPOSITORIO GITHUB: 🔗 
+https://github.com/E-lizzy93/M-DULO-7-ACCESO-A-DATOS-EN-APLICACIONES-NODE-.git
+
+Carpeta: /ejercicio_transacciones_ordenes_validaci-n_de_stock_y_despachos-main
+
+Estructura del Proyecto:
+
+/db: Módulo que gestiona la conexión a PostgreSQL y contiene la lógica de transacciones SQL (BEGIN, COMMIT, ROLLBACK) para asegurar la integridad de las órdenes.
+
+/public: Interfaz de usuario donde se realizan las simulaciones de compra, validación de inventario y generación de despachos.
+
+/scripts: Contiene los archivos SQL necesarios para la creación de tablas de productos, órdenes y stock inicial.
+
+server.js: Servidor Express que procesa las peticiones de compra, coordinando las validaciones previas antes de confirmar cualquier transacción en la base de datos.
+
+package.json: Registro de las dependencias del proyecto, incluyendo el driver pg para la comunicación con PostgreSQL.

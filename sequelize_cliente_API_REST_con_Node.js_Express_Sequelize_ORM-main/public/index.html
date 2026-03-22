@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clientes — Sequelize</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header>
+  <h1>🌿 Clientes — Sequelize ORM</h1>
+  <span>Node.js + Express + Sequelize + PostgreSQL</span>
+</header>
+
+<div class="layout">
+
+  <!-- Formulario agregar cliente -->
+  <div class="card">
+    <div class="card-header">
+      <h2>➕ Agregar cliente</h2>
+    </div>
+    <div class="card-body">
+      <div class="form-grupo">
+        <label>Nombre *</label>
+        <input type="text" id="nombre" placeholder="Juan Pérez">
+      </div>
+      <div class="form-grupo">
+        <label>Email *</label>
+        <input type="email" id="email" placeholder="juan@email.com">
+      </div>
+      <button class="btn btn-verde" id="btn-agregar" onclick="agregarCliente()">
+        ✅ Agregar cliente
+      </button>
+      <div class="alerta" id="alerta-form"></div>
+    </div>
+  </div>
+
+  <!-- Lista de clientes -->
+  <div class="card">
+    <div class="card-header">
+      <h2>👥 Listado de clientes</h2>
+      <button class="btn btn-outline" style="width:auto; padding:5px 14px; font-size:0.8rem"
+              onclick="cargarClientes()">🔄 Recargar</button>
+    </div>
+    <div class="card-body">
+      <div id="lista"><div class="loading">Cargando...</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = '/clientes';
+  const $   = id => document.getElementById(id);
+
+  // Elimina acentos y ñ para generar emails válidos (ej: "Álvaro Núñez" → "alvaro.nunez")
+  function normalizarTexto(texto) {
+    return texto
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/ñ/gi, "n")
+      .toLowerCase()
+      .trim();
+  }
+
+  function toast(txt, tipo = 'ok') {
+    const el = $('toast');
+    el.textContent = txt;
+    el.className = `toast ${tipo} visible`;
+    setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  function mostrarAlerta(id, txt, tipo) {
+    const el = $(id);
+    const ic = { ok: '✅', error: '❌' };
+    el.innerHTML = `<span>${ic[tipo]}</span> ${txt}`;
+    el.className = `alerta alerta-${tipo} visible`;
+  }
+
+  // GET /clientes
+  async function cargarClientes() {
+    $('lista').innerHTML = '<div class="loading">Consultando base de datos...</div>';
+    try {
+      const res  = await fetch(API);
+      const data = await res.json();
+
+      if (data.length === 0) {
+        $('lista').innerHTML = '<div class="empty">No hay clientes registrados aún.</div>';
+        return;
+      }
+
+      $('lista').innerHTML = data.map(c => `
+        <div class="cliente-item">
+          <div class="avatar">${c.nombre.charAt(0).toUpperCase()}</div>
+          <div class="cliente-info">
+            <strong>${c.nombre}</strong>
+            <span>${c.email}</span>
+          </div>
+          <span class="badge-id">#${c.id}</span>
+        </div>`).join('');
+
+    } catch {
+      $('lista').innerHTML = '<div class="empty">Error al conectar con el servidor.</div>';
+    }
+  }
+
+  // POST /clientes
+  async function agregarCliente() {
+    const nombre = $('nombre').value.trim();
+    // Normalizar solo la parte local del email (antes del @)
+    // Ej: "Álvaro.Núñez@email.com" → "alvaro.nunez@email.com"
+    const partes = $('email').value.trim().split('@');
+    const email  = normalizarTexto(partes[0]) + '@' + partes[1];
+    const btn    = $('btn-agregar');
+
+    if (!nombre || !email) {
+      mostrarAlerta('alerta-form', 'Los campos nombre y email son obligatorios.', 'error');
+      return;
+    }
+
+    btn.disabled    = true;
+    btn.textContent = '⏳ Agregando...';
+
+    try {
+      const res  = await fetch(API, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ nombre, email })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        mostrarAlerta('alerta-form', data.mensaje || 'Error al crear cliente', 'error');
+        toast(data.mensaje, 'error');
+      } else {
+        mostrarAlerta('alerta-form', `Cliente "${data.nombre}" agregado correctamente`, 'ok');
+        toast(`${data.nombre} agregado ✓`, 'ok');
+        $('nombre').value = $('email').value = '';
+        cargarClientes();
+      }
+    } catch {
+      mostrarAlerta('alerta-form', 'Error al conectar con el servidor', 'error');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = '✅ Agregar cliente';
+    }
+  }
+
+  // Sugerir email al escribir el nombre
+  // Cuando el usuario escribe "Álvaro Núñez", sugiere "alvaro.nunez@email.com"
+  $('nombre').addEventListener('input', () => {
+    const nombre = $('nombre').value.trim();
+    if (!nombre || $('email').value) return; // no sobreescribir si ya hay email
+
+    const partes   = nombre.split(' ').map(normalizarTexto).filter(Boolean);
+    const sugerido = partes.join('.') + '@email.com';
+    $('email').placeholder = sugerido;
+  });
+
+  // Enter en los inputs
+  ['nombre', 'email'].forEach(id => {
+    $(id).addEventListener('keydown', e => { if (e.key === 'Enter') agregarCliente(); });
+  });
+
+  cargarClientes();
+</script>
+</body>
+</html>

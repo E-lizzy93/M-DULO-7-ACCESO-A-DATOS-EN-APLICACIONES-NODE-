@@ -1,0 +1,20 @@
+ENTREGA MÓDULO 7: ACCESO A DATOS EN APLICACIONES NODE
+
+📂 Proyecto: Actividad- Consultas parametrizadas con Node + pg: CRUD de clientes
+
+REPOSITORIO GITHUB: 🔗 
+https://github.com/E-lizzy93/M-DULO-7-ACCESO-A-DATOS-EN-APLICACIONES-NODE-.git
+
+Carpeta: /actividada2-clientes_CRUD_basico_de_clientes_con_consultas_parametrizadas-main
+
+Estructura del Proyecto:
+
+/db: Contiene la configuración de conexión y las funciones que ejecutan las operaciones CRUD (Create, Read, Update, Delete) sobre la base de datos PostgreSQL.
+
+/public: Interfaz de usuario que permite gestionar el listado de clientes de forma visual.
+
+server.js: Servidor Express que define los endpoints de la API, implementando consultas parametrizadas para garantizar la seguridad de los datos.
+
+package.json: Registro de dependencias (pg, express) y configuración del entorno del proyecto.
+
+README.md: Explicación de las consultas SQL utilizadas y los pasos para levantar el proyecto localmente.

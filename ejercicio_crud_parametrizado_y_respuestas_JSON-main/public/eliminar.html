@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eliminar Cliente</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<nav>
+  <div class="logo">🐘 <span>Node</span> + pg</div>
+  <div class="nav-links">
+    <a href="/index.html">Inicio</a>
+    <a href="/consultar.html">Consultar</a>
+    <a href="/crear.html">Crear</a>
+    <a href="/editar.html">Editar</a>
+    <a href="/eliminar.html" class="activo">Eliminar</a>
+  </div>
+</nav>
+<div class="contenedor">
+  <div class="seccion-header">
+    <div>
+      <h2>🗑 Eliminar cliente</h2>
+      <p class="subtitulo">Por RUT, nombre o edad — muestra los datos antes de confirmar</p>
+    </div>
+  </div>
+
+  <!-- Paso 1: criterio de búsqueda -->
+  <div class="panel">
+    <div class="panel-titulo">🔍 Paso 1 — Buscar cliente</div>
+    <div class="form-grid">
+      <div class="form-grupo">
+        <label>RUT</label>
+        <input type="text" id="del-rut" placeholder="Ej: 12345678-9">
+      </div>
+      <div class="form-grupo">
+        <label>Nombre (completo o prefijo)</label>
+        <input type="text" id="del-nombre" placeholder="Ej: Ana">
+      </div>
+      <div class="form-grupo">
+        <label>Edad</label>
+        <input type="number" id="del-edad" placeholder="Ej: 19">
+      </div>
+    </div>
+    <div class="form-acciones">
+      <button class="btn btn-azul" onclick="buscarCliente()">🔍 Buscar</button>
+      <button class="btn btn-outline" onclick="limpiar()">Limpiar</button>
+    </div>
+    <div class="alerta" id="alerta-buscar"></div>
+  </div>
+
+  <!-- Paso 2: confirmar eliminación -->
+  <div class="panel" id="panel-confirmar" style="display:none">
+    <div class="panel-titulo">⚠️ Paso 2 — Confirmar eliminación</div>
+    <div style="background:#fff8e1; border:1px solid #ffe082; border-radius:8px; padding:16px; margin-bottom:18px">
+      <p style="font-size:0.85rem; color:#5d4037; margin-bottom:10px">Se eliminará el siguiente registro de forma permanente:</p>
+      <table>
+        <thead><tr><th>RUT</th><th>Nombre</th><th>Edad</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge-rut" id="conf-rut"></span></td>
+            <td id="conf-nombre"></td>
+            <td id="conf-edad"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="form-acciones">
+      <button class="btn btn-rojo" id="btn-eliminar" onclick="confirmarEliminacion()">🗑 Sí, eliminar</button>
+      <button class="btn btn-outline" onclick="limpiar()">Cancelar</button>
+    </div>
+    <div class="alerta" id="alerta-eliminar"></div>
+  </div>
+
+  <!-- Paso 3: respuesta del servidor -->
+  <div id="respuesta"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  const $ = id => document.getElementById(id);
+
+  function toast(txt, tipo = 'ok') {
+    const el = $('toast');
+    el.textContent = txt;
+    el.className = `toast ${tipo} visible`;
+    setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  function mostrarAlerta(id, txt, tipo) {
+    const el = $(id);
+    const ic = { ok: '✅', error: '❌', warn: '⚠️' };
+    el.innerHTML = `<span>${ic[tipo]}</span><div>${txt}</div>`;
+    el.className = `alerta alerta-${tipo} visible`;
+  }
+
+  async function buscarCliente() {
+    const rut    = $('del-rut').value.trim();
+    const nombre = $('del-nombre').value.trim();
+    const edad   = $('del-edad').value.trim();
+
+    let params = '';
+    if (rut)         params = `?rut=${rut}`;
+    else if (nombre) params = `?nombre=${nombre}`;
+    else if (edad)   params = `?edad=${edad}`;
+    else { mostrarAlerta('alerta-buscar', 'Ingresa al menos un criterio de búsqueda.', 'error'); return; }
+
+    try {
+      const res  = await fetch(`/clientes${params}`);
+      const json = await res.json();
+
+      if (!json.ok) {
+        mostrarAlerta('alerta-buscar', json.mensaje, res.status === 400 ? 'warn' : 'error');
+        $('panel-confirmar').style.display = 'none';
+        return;
+      }
+
+      // Si hay más de 1 resultado no mostramos confirmación (el backend ya lo rechazaría)
+      const cliente = Array.isArray(json.data) ? json.data[0] : json.data;
+
+      $('conf-rut').textContent    = cliente.rut;
+      $('conf-nombre').textContent = cliente.nombre;
+      $('conf-edad').textContent   = `${cliente.edad} años`;
+      $('panel-confirmar').style.display = 'block';
+      $('alerta-buscar').className = 'alerta';
+      $('alerta-eliminar').className = 'alerta';
+      $('respuesta').innerHTML = '';
+
+    } catch {
+      mostrarAlerta('alerta-buscar', 'Error al conectar con el servidor', 'error');
+    }
+  }
+
+  async function confirmarEliminacion() {
+    const rut = $('conf-rut').textContent;
+    const btn = $('btn-eliminar');
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Eliminando...';
+
+    try {
+      const res  = await fetch(`/clientes?rut=${rut}`, { method: 'DELETE' });
+      const json = await res.json();
+
+      if (!json.ok) {
+        mostrarAlerta('alerta-eliminar', json.mensaje, 'error');
+        return;
+      }
+
+      mostrarAlerta('alerta-eliminar', json.mensaje, 'ok');
+      toast('Eliminado correctamente ✓', 'ok');
+
+      // Mostrar respuesta con rowCount
+      $('respuesta').innerHTML = `
+        <div class="panel">
+          <div class="panel-titulo">📦 Respuesta del servidor</div>
+          <div style="display:flex; gap:12px; align-items:center; font-size:0.9rem">
+            <span>ok: <strong>true</strong></span>
+            <span>rowCount: <span class="badge-rowcount">${json.rowCount}</span></span>
+            <span>mensaje: <em>"${json.mensaje}"</em></span>
+          </div>
+        </div>`;
+
+      // Ocultar panel de confirmación después de 2 segundos
+      setTimeout(() => {
+        $('panel-confirmar').style.display = 'none';
+        limpiar();
+      }, 2000);
+
+    } catch {
+      mostrarAlerta('alerta-eliminar', 'Error al conectar con el servidor', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🗑 Sí, eliminar';
+    }
+  }
+
+  function limpiar() {
+    $('del-rut').value = $('del-nombre').value = $('del-edad').value = '';
+    $('panel-confirmar').style.display = 'none';
+    $('alerta-buscar').className = 'alerta';
+    $('respuesta').innerHTML = '';
+  }
+</script>
+</body>
+</html>

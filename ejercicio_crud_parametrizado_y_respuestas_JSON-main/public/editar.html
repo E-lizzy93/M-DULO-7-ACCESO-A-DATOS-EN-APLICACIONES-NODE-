@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar Cliente</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<nav>
+  <div class="logo">🐘 <span>Node</span> + pg</div>
+  <div class="nav-links">
+    <a href="/index.html">Inicio</a>
+    <a href="/consultar.html">Consultar</a>
+    <a href="/crear.html">Crear</a>
+    <a href="/editar.html" class="activo">Editar</a>
+    <a href="/eliminar.html">Eliminar</a>
+  </div>
+</nav>
+<div class="contenedor">
+  <div class="seccion-header">
+    <div>
+      <h2>✏️ Editar cliente</h2>
+      <p class="subtitulo">Solo se puede modificar el nombre — respuesta incluye rowCount</p>
+    </div>
+  </div>
+
+  <div class="panel" style="max-width:560px">
+    <div class="panel-titulo">🔍 Paso 1 — Buscar por RUT</div>
+    <div style="display:flex; gap:10px; align-items:flex-end">
+      <div class="form-grupo" style="flex:1">
+        <label>RUT del cliente</label>
+        <input type="text" id="buscar-rut" placeholder="Ej: 12345678-9">
+      </div>
+      <button class="btn btn-azul" onclick="buscarCliente()">Buscar</button>
+    </div>
+    <div class="alerta" id="alerta-buscar"></div>
+  </div>
+
+  <div class="panel" id="panel-editar" style="max-width:560px; display:none">
+    <div class="panel-titulo">✏️ Paso 2 — Modificar nombre</div>
+    <div class="form-grupo" style="margin-bottom:10px">
+      <label>RUT</label>
+      <input type="text" id="rut-actual" disabled style="background:#f5f5f5">
+    </div>
+    <div class="form-grupo" style="margin-bottom:10px">
+      <label>Nombre actual</label>
+      <input type="text" id="nombre-actual" disabled style="background:#f5f5f5">
+    </div>
+    <div class="form-grupo">
+      <label>Nuevo nombre *</label>
+      <input type="text" id="nuevo-nombre" placeholder="Escribe el nuevo nombre">
+    </div>
+    <div class="form-acciones">
+      <button class="btn btn-amarillo" id="btn-editar" onclick="editarCliente()">💾 Guardar cambio</button>
+      <button class="btn btn-outline" onclick="cancelar()">Cancelar</button>
+    </div>
+    <div class="alerta" id="alerta-editar"></div>
+  </div>
+
+  <div id="respuesta"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  const $ = id => document.getElementById(id);
+
+  function toast(txt, tipo = 'ok') {
+    const el = $('toast');
+    el.textContent = txt;
+    el.className = `toast ${tipo} visible`;
+    setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  function mostrarAlerta(id, txt, tipo) {
+    const el = $(id);
+    const ic = { ok: '✅', error: '❌' };
+    el.innerHTML = `<span>${ic[tipo]}</span><div>${txt}</div>`;
+    el.className = `alerta alerta-${tipo} visible`;
+  }
+
+  async function buscarCliente() {
+    const rut = $('buscar-rut').value.trim();
+    if (!rut) { mostrarAlerta('alerta-buscar', 'Ingresa un RUT para buscar.', 'error'); return; }
+    try {
+      const res  = await fetch(`/clientes?rut=${rut}`);
+      const json = await res.json();
+      if (!json.ok) {
+        mostrarAlerta('alerta-buscar', json.mensaje, 'error');
+        $('panel-editar').style.display = 'none';
+        return;
+      }
+      const cliente = Array.isArray(json.data) ? json.data[0] : json.data;
+      $('rut-actual').value    = cliente.rut;
+      $('nombre-actual').value = cliente.nombre;
+      $('nuevo-nombre').value  = '';
+      $('panel-editar').style.display = 'block';
+      $('alerta-buscar').className = 'alerta';
+      $('respuesta').innerHTML = '';
+    } catch {
+      mostrarAlerta('alerta-buscar', 'Error al conectar con el servidor', 'error');
+    }
+  }
+
+  async function editarCliente() {
+    const rut    = $('rut-actual').value;
+    const nombre = $('nuevo-nombre').value.trim();
+    const btn    = $('btn-editar');
+    if (!nombre) { mostrarAlerta('alerta-editar', 'Debes ingresar el nuevo nombre.', 'error'); return; }
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Guardando...';
+    try {
+      const res  = await fetch(`/clientes/${rut}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre })
+      });
+      const json = await res.json();
+      if (!json.ok) { mostrarAlerta('alerta-editar', json.mensaje, 'error'); return; }
+
+      mostrarAlerta('alerta-editar', json.mensaje, 'ok');
+      $('nombre-actual').value = nombre;
+      $('nuevo-nombre').value  = '';
+      toast('Nombre actualizado ✓', 'ok');
+
+      // Mostrar respuesta con rowCount
+      $('respuesta').innerHTML = `
+        <div class="panel" style="max-width:560px">
+          <div class="panel-titulo">📦 Respuesta del servidor</div>
+          <div style="display:flex; gap:12px; align-items:center; font-size:0.9rem">
+            <span>ok: <strong>true</strong></span>
+            <span>rowCount: <span class="badge-rowcount">${json.rowCount}</span></span>
+            <span>mensaje: <em>"${json.mensaje}"</em></span>
+          </div>
+        </div>`;
+    } catch {
+      mostrarAlerta('alerta-editar', 'Error al conectar con el servidor', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '💾 Guardar cambio';
+    }
+  }
+
+  function cancelar() {
+    $('buscar-rut').value = '';
+    $('panel-editar').style.display = 'none';
+    $('alerta-buscar').className = 'alerta';
+    $('respuesta').innerHTML = '';
+  }
+
+  $('buscar-rut').addEventListener('keydown', e => { if (e.key === 'Enter') buscarCliente(); });
+</script>
+</body>
+</html>

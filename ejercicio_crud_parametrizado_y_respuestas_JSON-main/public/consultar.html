@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consultar Clientes</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<nav>
+  <div class="logo">🐘 <span>Node</span> + pg</div>
+  <div class="nav-links">
+    <a href="/index.html">Inicio</a>
+    <a href="/consultar.html" class="activo">Consultar</a>
+    <a href="/crear.html">Crear</a>
+    <a href="/editar.html">Editar</a>
+    <a href="/eliminar.html">Eliminar</a>
+  </div>
+</nav>
+<div class="contenedor">
+  <div class="seccion-header">
+    <div>
+      <h2>🔍 Consultar clientes</h2>
+      <p class="subtitulo">Busca por RUT, nombre (prefijo) o edad</p>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-titulo">Filtros de búsqueda</div>
+    <div class="form-grid">
+      <div class="form-grupo">
+        <label>RUT</label>
+        <input type="text" id="f-rut" placeholder="Ej: 12345678-9">
+      </div>
+      <div class="form-grupo">
+        <label>Nombre (completo o prefijo)</label>
+        <input type="text" id="f-nombre" placeholder="Ej: Ana o An">
+      </div>
+      <div class="form-grupo">
+        <label>Edad</label>
+        <input type="number" id="f-edad" placeholder="Ej: 28">
+      </div>
+    </div>
+    <div class="form-acciones">
+      <button class="btn btn-azul" onclick="buscar()">🔍 Buscar</button>
+      <button class="btn btn-outline" onclick="verTodos()">📋 Ver todos</button>
+    </div>
+    <div class="alerta" id="alerta"></div>
+  </div>
+  <div id="resultados"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  const $ = id => document.getElementById(id);
+
+  function toast(txt, tipo = 'ok') {
+    const el = $('toast');
+    el.textContent = txt;
+    el.className = `toast ${tipo} visible`;
+    setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  function mostrarAlerta(txt, tipo) {
+    const el = $('alerta');
+    const ic = { ok: '✅', error: '❌', warn: '⚠️' };
+    el.innerHTML = `<span>${ic[tipo]}</span><div>${txt}</div>`;
+    el.className = `alerta alerta-${tipo} visible`;
+  }
+
+  function renderTabla(data, titulo) {
+    if (!Array.isArray(data)) data = [data];
+    return `
+      <div class="panel">
+        <div class="info-conexion">${titulo} — ${data.length} resultado(s)</div>
+        <table>
+          <thead><tr><th>RUT</th><th>Nombre</th><th>Edad</th></tr></thead>
+          <tbody>
+            ${data.map(c => `
+              <tr>
+                <td><span class="badge-rut">${c.rut}</span></td>
+                <td><strong>${c.nombre}</strong></td>
+                <td>${c.edad} años</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  async function buscar() {
+    const rut    = $('f-rut').value.trim();
+    const nombre = $('f-nombre').value.trim();
+    const edad   = $('f-edad').value.trim();
+
+    let params = '', titulo = '';
+    if (rut)         { params = `?rut=${rut}`;         titulo = `RUT: ${rut}`; }
+    else if (nombre) { params = `?nombre=${nombre}`;   titulo = `Nombre: "${nombre}"`; }
+    else if (edad)   { params = `?edad=${edad}`;       titulo = `Edad: ${edad}`; }
+    else             { verTodos(); return; }
+
+    try {
+      const res  = await fetch(`/clientes${params}`);
+      const json = await res.json();
+      if (!json.ok) {
+        $('resultados').innerHTML = '';
+        mostrarAlerta(json.mensaje, 'error');
+        return;
+      }
+      $('alerta').className = 'alerta';
+      $('resultados').innerHTML = renderTabla(json.data, titulo);
+      toast(`${json.data.length ?? 1} resultado(s)`, 'ok');
+    } catch {
+      mostrarAlerta('Error al conectar con el servidor', 'error');
+    }
+  }
+
+  async function verTodos() {
+    $('resultados').innerHTML = '<div class="loading">Cargando...</div>';
+    try {
+      const res  = await fetch('/clientes');
+      const json = await res.json();
+      if (!json.ok) { $('resultados').innerHTML = `<div class="empty"><div class="icon">📭</div><p>${json.mensaje}</p></div>`; return; }
+      $('alerta').className = 'alerta';
+      $('resultados').innerHTML = renderTabla(json.data, 'Todos los clientes');
+      toast(`${json.data.length} clientes cargados`, 'ok');
+    } catch {
+      $('resultados').innerHTML = '<div class="empty"><div class="icon">⚠️</div><p>Error al conectar con el servidor</p></div>';
+    }
+  }
+
+  verTodos();
+</script>
+</body>
+</html>

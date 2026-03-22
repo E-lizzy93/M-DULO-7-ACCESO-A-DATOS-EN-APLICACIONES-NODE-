@@ -1,0 +1,22 @@
+ENTREGA MÓDULO 7: ACCESO A DATOS EN APLICACIONES NODE
+
+📂 Proyecto: Actividad Node-PG — Conexión a Base de Datos
+
+REPOSITORIO GITHUB: 🔗 
+https://github.com/E-lizzy93/M-DULO-7-ACCESO-A-DATOS-EN-APLICACIONES-NODE-.git
+
+Carpeta: /actividad-node-pg-main
+
+Estructura del Proyecto:
+
+/db: Contiene la lógica de conexión a la base de datos PostgreSQL, utilizando el paquete pg para gestionar el pool de conexiones.
+
+/scripts: Archivos SQL con las sentencias de creación de tablas (DDL) e inserción de datos iniciales.
+
+/public: Archivos del lado del cliente para visualizar e interactuar con los datos persistentes.
+
+server.js: Servidor Express que actúa como API para realizar consultas a la base de datos.
+
+package.json: Registro de dependencias fundamentales (como pg y express) y scripts de ejecución.
+
+README.md: Guía paso a paso para la configuración del entorno y la base de datos local.

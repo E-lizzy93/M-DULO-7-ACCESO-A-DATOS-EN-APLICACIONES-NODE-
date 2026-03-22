@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ver Clientes</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<nav>
+  <div class="logo">🐘 <span>Node</span> + pg</div>
+  <div class="nav-links">
+    <a href="/index.html">Inicio</a>
+    <a href="/clientes.html" class="activo">Ver</a>
+    <a href="/crear.html">Crear</a>
+    <a href="/editar.html">Editar</a>
+    <a href="/eliminar.html">Eliminar</a>
+  </div>
+</nav>
+<div class="contenedor">
+  <div class="seccion-header">
+    <div>
+      <h2>👥 Listado de clientes</h2>
+      <p class="subtitulo">Todos los clientes registrados en la base de datos</p>
+    </div>
+    <button class="btn btn-azul" onclick="cargarClientes()">🔄 Recargar</button>
+  </div>
+  <div id="contenido"><div class="loading">Cargando...</div></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  function toast(txt, tipo = 'ok') {
+    const el = document.getElementById('toast');
+    el.textContent = txt;
+    el.className = `toast ${tipo} visible`;
+    setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  async function cargarClientes() {
+    const contenido = document.getElementById('contenido');
+    contenido.innerHTML = '<div class="loading">Consultando base de datos...</div>';
+    try {
+      const res  = await fetch('/clientes');
+      if (!res.ok) throw new Error((await res.json()).error);
+      const data = await res.json();
+
+      if (data.length === 0) {
+        contenido.innerHTML = '<div class="empty"><div class="icon">👤</div><p>No hay clientes registrados. <a href="/crear.html" style="color:var(--azul)">Crear primero →</a></p></div>';
+        return;
+      }
+
+      contenido.innerHTML = `
+        <div class="info-conexion">📊 ${data.length} cliente(s) encontrados</div>
+        <table>
+          <thead><tr><th>RUT</th><th>Nombre</th><th>Edad</th></tr></thead>
+          <tbody>
+            ${data.map(c => `
+              <tr>
+                <td><span class="badge-rut">${c.rut}</span></td>
+                <td><strong>${c.nombre}</strong></td>
+                <td>${c.edad} años</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+      toast(`${data.length} clientes cargados`, 'ok');
+    } catch (err) {
+      contenido.innerHTML = `<div class="alerta alerta-error visible"><span>❌</span> ${err.message}</div>`;
+    }
+  }
+
+  cargarClientes();
+</script>
+</body>
+</html>

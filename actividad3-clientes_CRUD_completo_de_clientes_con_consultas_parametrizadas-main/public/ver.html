@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ver Clientes</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<nav>
+  <div class="logo">🐘 <span>Node</span> + pg</div>
+  <div class="nav-links">
+    <a href="/index.html">Inicio</a>
+    <a href="/ver.html" class="activo">Ver</a>
+    <a href="/crear.html">Crear</a>
+    <a href="/editar.html">Editar</a>
+    <a href="/eliminar.html">Eliminar</a>
+  </div>
+</nav>
+<div class="contenedor">
+  <div class="seccion-header">
+    <div>
+      <h2>🔍 Consultar clientes</h2>
+      <p class="subtitulo">Busca por RUT, nombre, edad exacta o rango de edad</p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="panel">
+    <div class="panel-titulo">🔎 Filtros de búsqueda</div>
+
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="form-grupo">
+        <label>Buscar por RUT</label>
+        <input type="text" id="f-rut" placeholder="Ej: 12345678-9">
+      </div>
+      <div class="form-grupo">
+        <label>Buscar por nombre</label>
+        <input type="text" id="f-nombre" placeholder="Ej: Ana (parcial o completo)">
+      </div>
+    </div>
+
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="form-grupo">
+        <label>Buscar por edad exacta</label>
+        <input type="number" id="f-edad" placeholder="Ej: 28">
+      </div>
+      <div class="form-grupo">
+        <label>Buscar por rango de edad</label>
+        <div style="display:flex; gap:8px">
+          <input type="number" id="f-edadMin" placeholder="Desde">
+          <input type="number" id="f-edadMax" placeholder="Hasta">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-acciones">
+      <button class="btn btn-azul"   onclick="buscar()">🔍 Buscar</button>
+      <button class="btn btn-outline" onclick="cargarTodos()">📋 Ver todos</button>
+    </div>
+    <div class="alerta" id="alerta-buscar"></div>
+  </div>
+
+  <!-- Resultados -->
+  <div id="resultados"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  function toast(txt, tipo = 'ok') {
+    const el = $('toast');
+    el.textContent = txt;
+    el.className = `toast ${tipo} visible`;
+    setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  function alerta(id, txt, tipo) {
+    const el = $(id);
+    const ic = { ok: '✅', error: '❌', info: 'ℹ️' };
+    el.innerHTML = `<span>${ic[tipo]}</span> ${txt}`;
+    el.className = `alerta alerta-${tipo} visible`;
+  }
+
+  function renderTabla(data, titulo) {
+    if (!Array.isArray(data)) data = [data];
+    return `
+      <div class="panel">
+        <div class="info-conexion">${titulo} — ${data.length} resultado(s)</div>
+        <table>
+          <thead><tr><th>RUT</th><th>Nombre</th><th>Edad</th></tr></thead>
+          <tbody>
+            ${data.map(c => `
+              <tr>
+                <td><span class="badge-rut">${c.rut}</span></td>
+                <td><strong>${c.nombre}</strong></td>
+                <td>${c.edad} años</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  async function buscar() {
+    const rut     = $('f-rut').value.trim();
+    const nombre  = $('f-nombre').value.trim();
+    const edad    = $('f-edad').value.trim();
+    const edadMin = $('f-edadMin').value.trim();
+    const edadMax = $('f-edadMax').value.trim();
+
+    let params = '';
+    let titulo = '';
+
+    if (rut)               { params = `?rut=${rut}`;                     titulo = `RUT: ${rut}`; }
+    else if (nombre)       { params = `?nombre=${nombre}`;               titulo = `Nombre: "${nombre}"`; }
+    else if (edad)         { params = `?edad=${edad}`;                   titulo = `Edad: ${edad}`; }
+    else if (edadMin && edadMax) { params = `?edadMin=${edadMin}&edadMax=${edadMax}`; titulo = `Edad entre ${edadMin} y ${edadMax}`; }
+    else { cargarTodos(); return; }
+
+    try {
+      const res  = await fetch(`/clientes${params}`);
+      const data = await res.json();
+      if (!res.ok) {
+        $('resultados').innerHTML = '';
+        alerta('alerta-buscar', data.mensaje || data.error, 'error');
+        return;
+      }
+      $('alerta-buscar').className = 'alerta';
+      $('resultados').innerHTML = renderTabla(data, titulo);
+      toast(`Búsqueda completada`, 'ok');
+    } catch {
+      alerta('alerta-buscar', 'Error al conectar con el servidor', 'error');
+    }
+  }
+
+  async function cargarTodos() {
+    $('resultados').innerHTML = '<div class="loading">Cargando...</div>';
+    try {
+      const res  = await fetch('/clientes');
+      const data = await res.json();
+      $('resultados').innerHTML = renderTabla(data, 'Todos los clientes');
+      $('alerta-buscar').className = 'alerta';
+      toast(`${data.length} clientes cargados`, 'ok');
+    } catch {
+      $('resultados').innerHTML = '<div class="empty"><div class="icon">⚠️</div><p>Error al conectar con el servidor</p></div>';
+    }
+  }
+
+  cargarTodos();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+REGA MÓDULO 7: ACCESO A DATOS EN APLICACIONES NODE
+
+Actividad
+Consultas parametrizadas II con Node + pg: filtros y operaciones por criterios
+
+REPOSITORIO GITHUB: 🔗 
+https://github.com/E-lizzy93/M-DULO-7-ACCESO-A-DATOS-EN-APLICACIONES-NODE-.git
+
+
+Carpeta: /ejercicio_crud_parametrizado_y_respuestas_JSON-main
+
+Estructura del Proyecto:
+
+/db: Contiene la lógica de interacción con PostgreSQL, utilizando consultas parametrizadas para manejar los datos de forma segura.
+
+/public: Archivos del frontend que consumen la API para mostrar y gestionar la información en el navegador.
+
+server.js: Servidor Express configurado para entregar respuestas en formato JSON, facilitando la comunicación entre el cliente y la base de datos.
+
+package.json: Registro de dependencias necesarias y scripts para iniciar el proyecto.
+
+README.md: Documentación técnica detallando el funcionamiento del CRUD y la estructura de las respuestas JSON.

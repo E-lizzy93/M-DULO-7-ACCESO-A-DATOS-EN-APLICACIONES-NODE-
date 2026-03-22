@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eliminar Cliente</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<nav>
+  <div class="logo">🐘 <span>Node</span> + pg</div>
+  <div class="nav-links">
+    <a href="/index.html">Inicio</a>
+    <a href="/ver.html">Ver</a>
+    <a href="/crear.html">Crear</a>
+    <a href="/editar.html">Editar</a>
+    <a href="/eliminar.html" class="activo">Eliminar</a>
+  </div>
+</nav>
+<div class="contenedor">
+  <div class="seccion-header">
+    <div>
+      <h2>🗑 Eliminar cliente</h2>
+      <p class="subtitulo">Busca el cliente por RUT y confirma la eliminación</p>
+    </div>
+  </div>
+
+  <!-- Paso 1: buscar por RUT -->
+  <div class="panel" style="max-width:560px">
+    <div class="panel-titulo">🔍 Paso 1 — Buscar cliente por RUT</div>
+    <div style="display:flex; gap:10px; align-items:flex-end">
+      <div class="form-grupo" style="flex:1">
+        <label>RUT del cliente</label>
+        <input type="text" id="buscar-rut" placeholder="Ej: 12345678-9">
+      </div>
+      <button class="btn btn-azul" onclick="buscarCliente()">Buscar</button>
+    </div>
+    <div class="alerta" id="alerta-buscar"></div>
+  </div>
+
+  <!-- Paso 2: confirmar eliminación -->
+  <div class="panel" id="panel-confirmar" style="max-width:560px; display:none">
+    <div class="panel-titulo">⚠️ Paso 2 — Confirmar eliminación</div>
+
+    <div style="background:#fff8e1; border:1px solid #ffe082; border-radius:8px; padding:16px; margin-bottom:18px">
+      <p style="font-size:0.85rem; color:#5d4037; margin-bottom:10px">Se eliminará el siguiente registro de forma permanente:</p>
+      <table>
+        <thead><tr><th>RUT</th><th>Nombre</th><th>Edad</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge-rut" id="conf-rut"></span></td>
+            <td id="conf-nombre"></td>
+            <td id="conf-edad"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="form-acciones">
+      <button class="btn btn-rojo" id="btn-eliminar" onclick="confirmarEliminacion()">🗑 Sí, eliminar</button>
+      <button class="btn btn-outline" onclick="cancelar()">Cancelar</button>
+    </div>
+    <div class="alerta" id="alerta-eliminar"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  function toast(txt, tipo = 'ok') {
+    const el = $('toast');
+    el.textContent = txt;
+    el.className = `toast ${tipo} visible`;
+    setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  function alerta(id, txt, tipo) {
+    const el = $(id);
+    const ic = { ok: '✅', error: '❌' };
+    el.innerHTML = `<span>${ic[tipo]}</span> ${txt}`;
+    el.className = `alerta alerta-${tipo} visible`;
+  }
+
+  async function buscarCliente() {
+    const rut = $('buscar-rut').value.trim();
+    if (!rut) { alerta('alerta-buscar', 'Ingresa un RUT para buscar.', 'error'); return; }
+
+    try {
+      const res  = await fetch(`/clientes?rut=${rut}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        alerta('alerta-buscar', data.mensaje || data.error, 'error');
+        $('panel-confirmar').style.display = 'none';
+        return;
+      }
+
+      // Mostrar datos del cliente encontrado
+      $('conf-rut').textContent    = data.rut;
+      $('conf-nombre').textContent = data.nombre;
+      $('conf-edad').textContent   = `${data.edad} años`;
+      $('panel-confirmar').style.display = 'block';
+      $('alerta-buscar').className = 'alerta';
+      $('alerta-eliminar').className = 'alerta';
+
+    } catch {
+      alerta('alerta-buscar', 'Error al conectar con el servidor', 'error');
+    }
+  }
+
+  async function confirmarEliminacion() {
+    const rut = $('conf-rut').textContent;
+    const btn = $('btn-eliminar');
+
+    btn.disabled    = true;
+    btn.textContent = '⏳ Eliminando...';
+
+    try {
+      const res  = await fetch(`/clientes/${rut}`, { method: 'DELETE' });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alerta('alerta-eliminar', data.mensaje || data.error, 'error');
+        return;
+      }
+
+      alerta('alerta-eliminar', data.mensaje, 'ok');
+      toast(data.mensaje, 'ok');
+      $('buscar-rut').value = '';
+      setTimeout(() => {
+        $('panel-confirmar').style.display = 'none';
+        $('alerta-eliminar').className = 'alerta';
+      }, 2000);
+
+    } catch {
+      alerta('alerta-eliminar', 'Error al conectar con el servidor', 'error');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = '🗑 Sí, eliminar';
+    }
+  }
+
+  function cancelar() {
+    $('buscar-rut').value = '';
+    $('panel-confirmar').style.display = 'none';
+    $('alerta-buscar').className = 'alerta';
+  }
+
+  $('buscar-rut').addEventListener('keydown', e => { if (e.key === 'Enter') buscarCliente(); });
+</script>
+</body>
+</html>

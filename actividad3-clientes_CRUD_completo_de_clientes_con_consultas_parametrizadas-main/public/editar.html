@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar Cliente</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<nav>
+  <div class="logo">🐘 <span>Node</span> + pg</div>
+  <div class="nav-links">
+    <a href="/index.html">Inicio</a>
+    <a href="/ver.html">Ver</a>
+    <a href="/crear.html">Crear</a>
+    <a href="/editar.html" class="activo">Editar</a>
+    <a href="/eliminar.html">Eliminar</a>
+  </div>
+</nav>
+<div class="contenedor">
+  <div class="seccion-header">
+    <div>
+      <h2>✏️ Editar cliente</h2>
+      <p class="subtitulo">Solo se puede modificar el nombre del cliente</p>
+    </div>
+  </div>
+
+  <div class="panel" style="max-width:560px">
+    <div class="panel-titulo">🔍 Buscar cliente por RUT</div>
+    <div style="display:flex; gap:10px; align-items:flex-end">
+      <div class="form-grupo" style="flex:1">
+        <label>RUT del cliente</label>
+        <input type="text" id="buscar-rut" placeholder="Ej: 12345678-9">
+      </div>
+      <button class="btn btn-azul" onclick="buscarCliente()">Buscar</button>
+    </div>
+    <div class="alerta" id="alerta-buscar"></div>
+  </div>
+
+  <div class="panel" id="panel-editar" style="max-width:560px; display:none">
+    <div class="panel-titulo">✏️ Modificar nombre</div>
+    <div class="form-grupo" style="margin-bottom:6px">
+      <label>RUT</label>
+      <input type="text" id="rut-actual" disabled style="background:#f5f5f5">
+    </div>
+    <div class="form-grupo" style="margin-bottom:6px">
+      <label>Nombre actual</label>
+      <input type="text" id="nombre-actual" disabled style="background:#f5f5f5">
+    </div>
+    <div class="form-grupo">
+      <label>Nuevo nombre *</label>
+      <input type="text" id="nuevo-nombre" placeholder="Escribe el nuevo nombre">
+    </div>
+    <div class="form-acciones">
+      <button class="btn btn-amarillo" id="btn-editar" onclick="editarCliente()">💾 Guardar cambio</button>
+      <button class="btn btn-outline" onclick="limpiar()">Cancelar</button>
+    </div>
+    <div class="alerta" id="alerta-editar"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  function toast(txt, tipo = 'ok') {
+    const el = $('toast');
+    el.textContent = txt;
+    el.className = `toast ${tipo} visible`;
+    setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  function alerta(id, txt, tipo) {
+    const el = $(id);
+    const ic = { ok: '✅', error: '❌' };
+    el.innerHTML = `<span>${ic[tipo]}</span> ${txt}`;
+    el.className = `alerta alerta-${tipo} visible`;
+  }
+
+  async function buscarCliente() {
+    const rut = $('buscar-rut').value.trim();
+    if (!rut) { alerta('alerta-buscar', 'Ingresa un RUT para buscar.', 'error'); return; }
+    try {
+      const res  = await fetch(`/clientes?rut=${rut}`);
+      const data = await res.json();
+      if (!res.ok) { alerta('alerta-buscar', data.mensaje || data.error, 'error'); $('panel-editar').style.display = 'none'; return; }
+      $('rut-actual').value    = data.rut;
+      $('nombre-actual').value = data.nombre;
+      $('nuevo-nombre').value  = '';
+      $('panel-editar').style.display = 'block';
+      $('alerta-buscar').className = 'alerta';
+    } catch {
+      alerta('alerta-buscar', 'Error al conectar con el servidor', 'error');
+    }
+  }
+
+  async function editarCliente() {
+    const rut    = $('rut-actual').value;
+    const nombre = $('nuevo-nombre').value.trim();
+    const btn    = $('btn-editar');
+    if (!nombre) { alerta('alerta-editar', 'Debes ingresar el nuevo nombre.', 'error'); return; }
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Guardando...';
+    try {
+      const res  = await fetch(`/clientes/${rut}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre })
+      });
+      const data = await res.json();
+      if (!res.ok) { alerta('alerta-editar', data.error || data.mensaje, 'error'); return; }
+      alerta('alerta-editar', `Nombre actualizado correctamente a "${nombre}"`, 'ok');
+      $('nombre-actual').value = nombre;
+      $('nuevo-nombre').value  = '';
+      toast(`Nombre actualizado ✓`, 'ok');
+    } catch {
+      alerta('alerta-editar', 'Error al conectar con el servidor', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '💾 Guardar cambio';
+    }
+  }
+
+  function limpiar() {
+    $('buscar-rut').value = '';
+    $('panel-editar').style.display = 'none';
+    $('alerta-buscar').className = 'alerta';
+  }
+
+  $('buscar-rut').addEventListener('keydown', e => { if (e.key === 'Enter') buscarCliente(); });
+</script>
+</body>
+</html>

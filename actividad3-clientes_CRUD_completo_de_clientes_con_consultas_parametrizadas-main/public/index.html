@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clientes — Consultas Parametrizadas</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<nav>
+  <div class="logo">🐘 <span>Node</span> + pg</div>
+  <div class="nav-links">
+    <a href="/index.html" class="activo">Inicio</a>
+    <a href="/ver.html">Ver</a>
+    <a href="/crear.html">Crear</a>
+    <a href="/editar.html">Editar</a>
+    <a href="/eliminar.html">Eliminar</a>
+  </div>
+</nav>
+<div class="contenedor">
+  <div class="hero">
+    <span class="badge">Módulo 7 — Consultas parametrizadas</span>
+    <h1>Gestión de Clientes</h1>
+    <p>CRUD completo con consultas parametrizadas usando Node.js + pg + PostgreSQL.</p>
+  </div>
+  <div class="cards-menu">
+    <a href="/ver.html" class="card-menu card-ver">
+      <div class="icon">🔍</div>
+      <h3>Ver / Consultar</h3>
+      <p>Buscar por RUT, nombre, edad o rango de edad</p>
+    </a>
+    <a href="/crear.html" class="card-menu card-crear">
+      <div class="icon">➕</div>
+      <h3>Crear cliente</h3>
+      <p>Registrar un nuevo cliente en la base de datos</p>
+    </a>
+    <a href="/editar.html" class="card-menu card-editar">
+      <div class="icon">✏️</div>
+      <h3>Editar cliente</h3>
+      <p>Modificar el nombre de un cliente por RUT</p>
+    </a>
+    <a href="/eliminar.html" class="card-menu card-eliminar">
+      <div class="icon">🗑</div>
+      <h3>Eliminar</h3>
+      <p>Eliminar por RUT, edad exacta o rango de edad</p>
+    </a>
+  </div>
+  <div class="panel">
+    <div class="panel-titulo">📋 Endpoints disponibles</div>
+    <table>
+      <thead><tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td><span style="color:var(--azul);font-weight:700">GET</span></td><td><code>/clientes</code></td><td>Todos los clientes</td></tr>
+        <tr><td><span style="color:var(--azul);font-weight:700">GET</span></td><td><code>/clientes?rut=X</code></td><td>Buscar por RUT</td></tr>
+        <tr><td><span style="color:var(--azul);font-weight:700">GET</span></td><td><code>/clientes?nombre=X</code></td><td>Buscar por nombre (parcial)</td></tr>
+        <tr><td><span style="color:var(--azul);font-weight:700">GET</span></td><td><code>/clientes?edad=X</code></td><td>Buscar por edad exacta</td></tr>
+        <tr><td><span style="color:var(--azul);font-weight:700">GET</span></td><td><code>/clientes?edadMin=X&edadMax=Y</code></td><td>Buscar por rango de edad</td></tr>
+        <tr><td><span style="color:var(--verde);font-weight:700">POST</span></td><td><code>/clientes</code></td><td>Crear cliente (rut, nombre, edad)</td></tr>
+        <tr><td><span style="color:var(--amarillo);font-weight:700">PUT</span></td><td><code>/clientes/:rut</code></td><td>Modificar nombre</td></tr>
+        <tr><td><span style="color:var(--rojo);font-weight:700">DELETE</span></td><td><code>/clientes/:rut</code></td><td>Eliminar por RUT</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

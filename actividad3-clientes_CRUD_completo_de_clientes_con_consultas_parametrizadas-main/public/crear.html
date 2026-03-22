@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crear Cliente</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<nav>
+  <div class="logo">🐘 <span>Node</span> + pg</div>
+  <div class="nav-links">
+    <a href="/index.html">Inicio</a>
+    <a href="/ver.html">Ver</a>
+    <a href="/crear.html" class="activo">Crear</a>
+    <a href="/editar.html">Editar</a>
+    <a href="/eliminar.html">Eliminar</a>
+  </div>
+</nav>
+<div class="contenedor">
+  <div class="seccion-header">
+    <div>
+      <h2>➕ Crear cliente</h2>
+      <p class="subtitulo">Registra un nuevo cliente en la base de datos</p>
+    </div>
+  </div>
+
+  <div class="panel" style="max-width:560px">
+    <div class="panel-titulo">📝 Datos del cliente</div>
+    <div class="form-grid-3">
+      <div class="form-grupo">
+        <label>RUT *</label>
+        <input type="text" id="rut" placeholder="12345678-9">
+      </div>
+      <div class="form-grupo">
+        <label>Nombre *</label>
+        <input type="text" id="nombre" placeholder="Juan Pérez">
+      </div>
+      <div class="form-grupo">
+        <label>Edad *</label>
+        <input type="number" id="edad" placeholder="25" min="1" max="120">
+      </div>
+    </div>
+    <div class="form-acciones">
+      <button class="btn btn-verde" id="btn-crear" onclick="crearCliente()">✅ Crear cliente</button>
+      <a href="/ver.html" class="btn btn-outline">Ver listado</a>
+    </div>
+    <div class="alerta" id="alerta"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  function toast(txt, tipo = 'ok') {
+    const el = $('toast');
+    el.textContent = txt;
+    el.className = `toast ${tipo} visible`;
+    setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  function alerta(txt, tipo) {
+    const el = $('alerta');
+    const ic = { ok: '✅', error: '❌' };
+    el.innerHTML = `<span>${ic[tipo]}</span> ${txt}`;
+    el.className = `alerta alerta-${tipo} visible`;
+  }
+
+  async function crearCliente() {
+    const rut    = $('rut').value.trim();
+    const nombre = $('nombre').value.trim();
+    const edad   = $('edad').value.trim();
+    const btn    = $('btn-crear');
+
+    if (!rut || !nombre || !edad) {
+      alerta('Los tres campos son obligatorios: RUT, nombre y edad.', 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Creando...';
+
+    try {
+      const res  = await fetch('/clientes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rut, nombre, edad: parseInt(edad) })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alerta(data.error || 'Error al crear cliente', 'error');
+        toast(data.error, 'error');
+      } else {
+        alerta(`Cliente "${data.cliente.nombre}" creado correctamente (RUT: ${data.cliente.rut})`, 'ok');
+        toast(`${data.cliente.nombre} creado ✓`, 'ok');
+        $('rut').value = $('nombre').value = $('edad').value = '';
+      }
+    } catch {
+      alerta('Error al conectar con el servidor', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '✅ Crear cliente';
+    }
+  }
+</script>
+</body>
+</html>

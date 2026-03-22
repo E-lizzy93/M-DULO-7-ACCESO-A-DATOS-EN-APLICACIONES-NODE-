@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Órdenes</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="icono">🛒</div>
+    <h2>Órdenes + pg</h2>
+    <span>Módulo 7 — Transacciones</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/index.html" class="activo"><span class="nav-icono">🏠</span> Inicio</a>
+    <a href="/productos.html"><span class="nav-icono">📦</span> Productos</a>
+    <a href="/ordenes.html"><span class="nav-icono">📋</span> Órdenes</a>
+    <a href="/nueva-orden.html"><span class="nav-icono">➕</span> Nueva Orden</a>
+  </nav>
+  <div class="sidebar-footer">Node.js + pg + PostgreSQL</div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div>
+      <span class="badge">Módulo 7 — Transacciones con pg</span>
+      <h1>Sistema de Órdenes de Compra</h1>
+      <p>Gestión de ventas con transacciones BEGIN/COMMIT/ROLLBACK y validación de stock</p>
+    </div>
+  </div>
+
+  <div class="cards">
+    <a href="/productos.html" class="card">
+      <div class="icono">📦</div>
+      <h3>Productos</h3>
+      <p>Ver catálogo y stock disponible en tiempo real</p>
+    </a>
+    <a href="/ordenes.html" class="card">
+      <div class="icono">📋</div>
+      <h3>Órdenes</h3>
+      <p>Consultar órdenes de un cliente por RUT</p>
+    </a>
+    <a href="/nueva-orden.html" class="card">
+      <div class="icono">➕</div>
+      <h3>Nueva Orden</h3>
+      <p>Crear orden con productos, dirección y despacho</p>
+    </a>
+  </div>
+
+  <div class="panel">
+    <div class="panel-titulo">📋 Endpoints disponibles</div>
+    <table>
+      <thead><tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td><span style="color:var(--azul);font-weight:700">GET</span></td><td><code>/api?filtro=productos</code></td><td>Lista todos los productos</td></tr>
+        <tr><td><span style="color:var(--azul);font-weight:700">GET</span></td><td><code>/api?filtro=productos&id=X</code></td><td>Producto por id</td></tr>
+        <tr><td><span style="color:var(--azul);font-weight:700">GET</span></td><td><code>/api?filtro=productos&orden=X</code></td><td>Productos de una orden</td></tr>
+        <tr><td><span style="color:var(--azul);font-weight:700">GET</span></td><td><code>/api?filtro=ordenes&rut=X</code></td><td>Órdenes por RUT de cliente</td></tr>
+        <tr><td><span style="color:var(--azul);font-weight:700">GET</span></td><td><code>/api?filtro=clientes</code></td><td>Lista todos los clientes</td></tr>
+        <tr><td><span style="color:var(--azul);font-weight:700">GET</span></td><td><code>/api?filtro=clientes&rut=X</code></td><td>Cliente por RUT</td></tr>
+        <tr><td><span style="color:var(--azul);font-weight:700">GET</span></td><td><code>/api?filtro=direcciones&rut=X</code></td><td>Direcciones por RUT</td></tr>
+        <tr><td><span style="color:var(--azul);font-weight:700">GET</span></td><td><code>/api?filtro=despachos&orden=X</code></td><td>Despacho por id de orden</td></tr>
+        <tr><td><span style="color:var(--verde);font-weight:700">POST</span></td><td><code>/orden</code></td><td>Crear orden (transacción completa)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Clientes disponibles -->
+  <div class="panel">
+    <div class="panel-titulo">👥 Clientes registrados</div>
+    <div id="clientes-lista"><div class="loading">Cargando clientes...</div></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+<script>
+  async function cargarClientes() {
+    try {
+      const res  = await fetch('/api?filtro=clientes');
+      const json = await res.json();
+      if (!json.ok) return;
+      document.getElementById('clientes-lista').innerHTML = `
+        <table>
+          <thead><tr><th>RUT</th><th>Nombre</th></tr></thead>
+          <tbody>
+            ${json.data.map(c => `
+              <tr>
+                <td><span class="badge-id">${c.rut}</span></td>
+                <td>${c.nombre}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+    } catch {}
+  }
+  cargarClientes();
+</script>
+</body>
+</html>

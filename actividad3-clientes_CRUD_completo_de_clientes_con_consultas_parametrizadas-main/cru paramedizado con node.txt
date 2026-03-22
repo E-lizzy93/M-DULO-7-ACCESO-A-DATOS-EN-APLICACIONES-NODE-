@@ -1,0 +1,21 @@
+ENTREGA MÓDULO 7: ACCESO A DATOS EN APLICACIONES NODE
+
+Actividad
+CRUD parametrizado con Node + pg (respuestas estandarizadas)
+
+REPOSITORIO GITHUB: 🔗 
+https://github.com/E-lizzy93/M-DULO-7-ACCESO-A-DATOS-EN-APLICACIONES-NODE-.git
+
+Carpeta: /actividad3-clientes_CRUD_completo_de_clientes_con_consultas_parametrizadas-main
+
+Estructura del Proyecto:
+
+/db: Módulo de base de datos donde se centralizan todas las operaciones SQL (Pool de conexiones y funciones CRUD) utilizando el driver pg.
+
+/public: Interfaz frontend que permite realizar todas las acciones del CRUD (formulario de registro, tabla de visualización, edición y eliminación).
+
+server.js: Punto de entrada de la aplicación donde se configuran los endpoints de la API REST y se gestionan las peticiones del cliente.
+
+package.json / package-lock.json: Archivos de configuración de NPM con las dependencias necesarias para el entorno de desarrollo y producción.
+
+README.md: Documentación con la descripción del proyecto, tecnologías utilizadas e instrucciones de configuración.

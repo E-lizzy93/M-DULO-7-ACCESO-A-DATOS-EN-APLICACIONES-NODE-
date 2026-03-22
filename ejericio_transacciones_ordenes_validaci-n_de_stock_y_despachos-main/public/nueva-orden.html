@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nueva Orden</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="icono">🛒</div>
+    <h2>Órdenes + pg</h2>
+    <span>Módulo 7 — Transacciones</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/index.html"><span class="nav-icono">🏠</span> Inicio</a>
+    <a href="/productos.html"><span class="nav-icono">📦</span> Productos</a>
+    <a href="/ordenes.html"><span class="nav-icono">📋</span> Órdenes</a>
+    <a href="/nueva-orden.html" class="activo"><span class="nav-icono">➕</span> Nueva Orden</a>
+  </nav>
+  <div class="sidebar-footer">Node.js + pg + PostgreSQL</div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div>
+      <h1>➕ Nueva orden de compra</h1>
+      <p>Transacción BEGIN/COMMIT/ROLLBACK con validación de stock</p>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start">
+
+    <!-- Columna izquierda: cliente + productos -->
+    <div>
+      <!-- Paso 1: cliente -->
+      <div class="panel">
+        <div class="panel-titulo">👤 Paso 1 — Cliente</div>
+
+        <!-- Lista de clientes disponibles -->
+        <div id="lista-clientes" style="margin-bottom:14px"></div>
+
+        <div class="form-grupo">
+          <label>RUT del cliente</label>
+          <input type="text" id="rut" placeholder="Ej: 12345678-9">
+        </div>
+        <div class="form-acciones">
+          <button class="btn btn-naranja" onclick="cargarCliente()">Buscar cliente</button>
+        </div>
+        <div class="alerta" id="alerta-cliente"></div>
+        <div id="datos-cliente" style="display:none; margin-top:14px">
+          <div class="info-box" id="info-cliente"></div>
+          <div class="form-grupo">
+            <label>Dirección de despacho</label>
+            <select id="id_direccion"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 2: agregar productos -->
+      <div class="panel" id="panel-productos" style="display:none">
+        <div class="panel-titulo">📦 Paso 2 — Agregar productos</div>
+        <div class="form-grupo">
+          <label>Producto</label>
+          <select id="sel-producto"></select>
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-end">
+          <div class="form-grupo" style="width:100px; margin:0">
+            <label>Cantidad</label>
+            <input type="number" id="cantidad" value="1" min="1">
+          </div>
+          <button class="btn btn-verde" onclick="agregarProducto()">➕ Agregar</button>
+        </div>
+        <div class="alerta" id="alerta-producto"></div>
+      </div>
+    </div>
+
+    <!-- Columna derecha: carrito + resultado -->
+    <div>
+      <div class="panel" id="panel-carrito" style="display:none">
+        <div class="panel-titulo">🛒 Carrito</div>
+        <div id="carrito"></div>
+        <div class="total-box" id="total-box" style="display:none">
+          <div>
+            <div class="label">Total de la orden</div>
+            <div class="monto" id="total-monto">$0</div>
+          </div>
+          <button class="btn btn-ghost" id="btn-orden" onclick="crearOrden()"
+                  style="background:rgba(255,255,255,0.15); color:white; border:none">
+            🛒 Confirmar
+          </button>
+        </div>
+        <div class="alerta" id="alerta-orden"></div>
+      </div>
+
+      <div id="resultado"></div>
+    </div>
+
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+<script>
+  const $ = id => document.getElementById(id);
+  let productosDisponibles = [];
+  let carrito = [];
+
+  function toast(txt, tipo = 'ok') {
+    const el = $('toast');
+    el.textContent = txt;
+    el.className = `toast ${tipo} visible`;
+    setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  function formatPesos(n) {
+    return '$' + Number(n).toLocaleString('es-CL');
+  }
+
+  function mostrarAlerta(id, txt, tipo) {
+    const el = $(id);
+    const ic = { ok: '✅', error: '❌', warn: '⚠️' };
+    el.innerHTML = `<span>${ic[tipo]}</span><div>${txt}</div>`;
+    el.className = `alerta alerta-${tipo} visible`;
+  }
+
+  async function cargarProductos() {
+    const res  = await fetch('/api?filtro=productos');
+    const json = await res.json();
+    if (!json.ok) return;
+    productosDisponibles = json.data;
+    $('sel-producto').innerHTML = json.data.map(p =>
+      `<option value="${p.id_producto}" data-precio="${p.precio}" data-stock="${p.existencias}">
+        #${p.id_producto} — ${p.nombre} (${formatPesos(p.precio)}) — Stock: ${p.existencias}
+      </option>`
+    ).join('');
+  }
+
+  async function cargarClientesLista() {
+    try {
+      const res  = await fetch('/api?filtro=clientes');
+      const json = await res.json();
+      if (!json.ok) return;
+      $('lista-clientes').innerHTML = `
+        <div style="font-size:0.75rem; color:var(--txt-dim); text-transform:uppercase;
+                    letter-spacing:0.05em; margin-bottom:8px">Clientes disponibles</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px">
+          ${json.data.map(c => `
+            <button class="btn btn-ghost btn-sm" onclick="seleccionarCliente('${c.rut}')"
+                    title="${c.rut}">
+              ${c.nombre}
+            </button>`).join('')}
+        </div>`;
+    } catch {}
+  }
+
+  function seleccionarCliente(rut) {
+    $('rut').value = rut;
+    cargarCliente();
+  }
+
+  async function cargarCliente() {
+    const rut = $('rut').value.trim();
+    if (!rut) { mostrarAlerta('alerta-cliente', 'Ingresa un RUT.', 'error'); return; }
+    try {
+      const [resC, resD] = await Promise.all([
+        fetch(`/api?filtro=clientes&rut=${rut}`),
+        fetch(`/api?filtro=direcciones&rut=${rut}`)
+      ]);
+      const jsonC = await resC.json();
+      const jsonD = await resD.json();
+      if (!jsonC.ok) { mostrarAlerta('alerta-cliente', jsonC.mensaje, 'error'); return; }
+      if (!jsonD.ok) { mostrarAlerta('alerta-cliente', 'Cliente sin direcciones registradas.', 'error'); return; }
+
+      $('info-cliente').innerHTML = `👤 <strong>${jsonC.data.nombre}</strong> — ${jsonC.data.rut}`;
+      $('id_direccion').innerHTML = jsonD.data.map(d =>
+        `<option value="${d.id_direccion}">${d.direccion}</option>`).join('');
+
+      $('datos-cliente').style.display   = 'block';
+      $('panel-productos').style.display = 'block';
+      $('panel-carrito').style.display   = 'block';
+      $('alerta-cliente').className = 'alerta';
+    } catch {
+      mostrarAlerta('alerta-cliente', 'Error al conectar con el servidor', 'error');
+    }
+  }
+
+  function agregarProducto() {
+    const sel      = $('sel-producto');
+    const cantidad = parseInt($('cantidad').value);
+    const id       = parseInt(sel.value);
+    const opt      = sel.options[sel.selectedIndex];
+    const precio   = parseInt(opt.dataset.precio);
+    const stock    = parseInt(opt.dataset.stock);
+    const nombre   = opt.text.split(' — ')[1].split(' (')[0];
+
+    if (cantidad < 1) { mostrarAlerta('alerta-producto', 'La cantidad debe ser al menos 1.', 'error'); return; }
+    if (cantidad > stock) { mostrarAlerta('alerta-producto', `Stock insuficiente. Disponible: ${stock}`, 'warn'); return; }
+
+    const existente = carrito.find(i => i.id_producto === id);
+    if (existente) existente.cantidad_producto += cantidad;
+    else carrito.push({ id_producto: id, nombre, precio, cantidad_producto: cantidad });
+
+    $('alerta-producto').className = 'alerta';
+    renderCarrito();
+  }
+
+  function quitarProducto(id) {
+    carrito = carrito.filter(i => i.id_producto !== id);
+    renderCarrito();
+  }
+
+  function actualizarCantidad(id, val) {
+    const item = carrito.find(i => i.id_producto === id);
+    if (item) item.cantidad_producto = parseInt(val) || 1;
+    renderCarrito();
+  }
+
+  function renderCarrito() {
+    if (carrito.length === 0) {
+      $('carrito').innerHTML = '<div class="empty" style="padding:20px"><p>Carrito vacío</p></div>';
+      $('total-box').style.display = 'none';
+      return;
+    }
+    let total = 0;
+    $('carrito').innerHTML = carrito.map(item => {
+      const sub = item.precio * item.cantidad_producto;
+      total += sub;
+      return `
+        <div class="carrito-item">
+          <span>${item.nombre}</span>
+          <input type="number" value="${item.cantidad_producto}" min="1"
+            onchange="actualizarCantidad(${item.id_producto}, this.value)">
+          <span class="precio">${formatPesos(sub)}</span>
+          <button class="btn btn-rojo btn-sm" onclick="quitarProducto(${item.id_producto})">✕</button>
+        </div>`;
+    }).join('');
+    $('total-monto').textContent = formatPesos(total);
+    $('total-box').style.display = 'flex';
+  }
+
+  async function crearOrden() {
+    const rut          = $('rut').value.trim();
+    const id_direccion = parseInt($('id_direccion').value);
+    const btn          = $('btn-orden');
+    if (carrito.length === 0) { mostrarAlerta('alerta-orden', 'Agrega al menos un producto.', 'error'); return; }
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Procesando...';
+
+    try {
+      const res  = await fetch('/orden', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          rut, id_direccion,
+          productos: carrito.map(i => ({ id_producto: i.id_producto, cantidad_producto: i.cantidad_producto }))
+        })
+      });
+      const json = await res.json();
+
+      if (!json.ok) {
+        mostrarAlerta('alerta-orden', json.mensaje, res.status === 409 ? 'warn' : 'error');
+        toast(json.mensaje, 'error');
+        $('resultado').innerHTML = `
+          <div class="panel resultado-rollback">
+            <div class="panel-titulo">❌ ROLLBACK — Orden no creada</div>
+            <p style="color:var(--rojo); font-size:0.9rem; margin-bottom:8px">${json.mensaje}</p>
+            <p style="color:var(--txt-dim); font-size:0.82rem">
+              La transacción fue revertida. No se modificó el stock ni se registró ningún dato.
+            </p>
+          </div>`;
+      } else {
+        toast('Orden creada correctamente ✓', 'ok');
+        $('resultado').innerHTML = `
+          <div class="panel resultado-commit">
+            <div class="panel-titulo">✅ COMMIT — Orden #${json.data.id_orden} creada (HTTP 201)</div>
+            <div class="info-box">
+              Total: <strong>${formatPesos(json.data.precio_total)}</strong> —
+              ${json.data.productos.length} producto(s)
+            </div>
+            <table>
+              <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
+              <tbody>
+                <tr><td>ID Orden</td><td><span class="badge-id">#${json.data.id_orden}</span></td></tr>
+                <tr><td>RUT cliente</td><td>${json.data.rut}</td></tr>
+                <tr><td>Precio total</td><td class="precio">${formatPesos(json.data.precio_total)}</td></tr>
+              </tbody>
+            </table>
+          </div>`;
+        carrito = [];
+        renderCarrito();
+        cargarProductos();
+      }
+    } catch {
+      mostrarAlerta('alerta-orden', 'Error al conectar con el servidor', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🛒 Confirmar';
+    }
+  }
+
+  $('rut').addEventListener('keydown', e => { if (e.key === 'Enter') cargarCliente(); });
+  cargarProductos();
+  cargarClientesLista();
+</script>
+</body>
+</html>

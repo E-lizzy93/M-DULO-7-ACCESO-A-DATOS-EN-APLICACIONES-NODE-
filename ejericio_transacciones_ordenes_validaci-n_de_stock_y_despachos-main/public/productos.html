@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Productos</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="icono">🛒</div>
+    <h2>Órdenes + pg</h2>
+    <span>Módulo 7 — Transacciones</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/index.html"><span class="nav-icono">🏠</span> Inicio</a>
+    <a href="/productos.html" class="activo"><span class="nav-icono">📦</span> Productos</a>
+    <a href="/ordenes.html"><span class="nav-icono">📋</span> Órdenes</a>
+    <a href="/nueva-orden.html"><span class="nav-icono">➕</span> Nueva Orden</a>
+  </nav>
+  <div class="sidebar-footer">Node.js + pg + PostgreSQL</div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div>
+      <h1>📦 Catálogo de productos</h1>
+      <p>Stock disponible en tiempo real desde PostgreSQL</p>
+    </div>
+    <button class="btn btn-ghost" onclick="cargarProductos()">🔄 Recargar</button>
+  </div>
+  <div id="contenido"><div class="loading">Cargando...</div></div>
+</main>
+
+<div class="toast" id="toast"></div>
+<script>
+  function toast(txt, tipo = 'ok') {
+    const el = document.getElementById('toast');
+    el.textContent = txt;
+    el.className = `toast ${tipo} visible`;
+    setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  function stockBadge(n) {
+    if (n === 0)  return `<span class="badge-out">Sin stock</span>`;
+    if (n <= 5)   return `<span class="badge-warn">${n} unidades</span>`;
+    return `<span class="badge-ok">${n} unidades</span>`;
+  }
+
+  function formatPesos(n) {
+    return '$' + Number(n).toLocaleString('es-CL');
+  }
+
+  async function cargarProductos() {
+    const contenido = document.getElementById('contenido');
+    contenido.innerHTML = '<div class="loading">Consultando base de datos...</div>';
+    try {
+      const res  = await fetch('/api?filtro=productos');
+      const json = await res.json();
+      if (!json.ok) {
+        contenido.innerHTML = `<div class="empty"><div class="icono">⚠️</div><p>${json.mensaje}</p></div>`;
+        return;
+      }
+      contenido.innerHTML = `
+        <div class="info-box">📊 ${json.data.length} productos en catálogo</div>
+        <div class="panel">
+          <table>
+            <thead><tr><th>ID</th><th>Producto</th><th>Precio</th><th>Stock</th></tr></thead>
+            <tbody>
+              ${json.data.map(p => `
+                <tr>
+                  <td><span class="badge-id">#${p.id_producto}</span></td>
+                  <td><strong style="color:var(--blanco)">${p.nombre}</strong></td>
+                  <td class="precio">${formatPesos(p.precio)}</td>
+                  <td>${stockBadge(p.existencias)}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+      toast(`${json.data.length} productos cargados`, 'ok');
+    } catch {
+      contenido.innerHTML = '<div class="empty"><div class="icono">⚠️</div><p>Error al conectar con el servidor</p></div>';
+    }
+  }
+
+  cargarProductos();
+</script>
+</body>
+</html>

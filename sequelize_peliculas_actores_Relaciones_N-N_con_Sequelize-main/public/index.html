@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Películas & Actores — Sequelize N-N</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🎬 Películas & Actores</h1>
+    <p>Relaciones N–N con Sequelize ORM</p>
+  </div>
+  <span class="header-badge">Node.js + Sequelize + PostgreSQL</span>
+</header>
+
+<!-- Tabs de navegación -->
+<div class="tabs">
+  <button class="tab activo" onclick="cambiarTab('peliculas', this)">🎬 Películas</button>
+  <button class="tab"        onclick="cambiarTab('actores',   this)">🎭 Actores</button>
+  <button class="tab"        onclick="cambiarTab('asignar',   this)">🔗 Asignar actor</button>
+  <button class="tab"        onclick="cambiarTab('crear',     this)">➕ Crear</button>
+</div>
+
+<div class="contenido">
+
+  <!-- ── Tab: Películas ────────────────────────────────── -->
+  <div id="tab-peliculas" class="seccion activo">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+      <h2 style="font-size:1.1rem; font-weight:800">Listado de películas</h2>
+      <button class="btn btn-outline" onclick="cargarPeliculas()">🔄 Recargar</button>
+    </div>
+    <div id="lista-peliculas"><div class="loading">Cargando...</div></div>
+  </div>
+
+  <!-- ── Tab: Actores ──────────────────────────────────── -->
+  <div id="tab-actores" class="seccion">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+      <h2 style="font-size:1.1rem; font-weight:800">Listado de actores</h2>
+      <button class="btn btn-outline" onclick="cargarActores()">🔄 Recargar</button>
+    </div>
+    <div id="lista-actores"><div class="loading">Cargando...</div></div>
+  </div>
+
+  <!-- ── Tab: Asignar actor ────────────────────────────── -->
+  <div id="tab-asignar" class="seccion">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><h3>🔗 Asignar actor a película</h3></div>
+        <div class="card-body">
+          <div class="form-grupo">
+            <label>Película</label>
+            <select id="sel-pelicula"></select>
+          </div>
+          <div class="form-grupo">
+            <label>Actor</label>
+            <select id="sel-actor"></select>
+          </div>
+          <button class="btn btn-verde btn-full" onclick="asignarActor()">🔗 Asignar</button>
+          <div class="alerta" id="alerta-asignar"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>ℹ️ ¿Cómo funciona la transacción?</h3></div>
+        <div class="card-body" style="font-size:0.85rem; line-height:1.7; color:#546e7a">
+          <p>Al asignar un actor a una película, el servidor usa una <strong>transacción</strong>:</p>
+          <br>
+          <p>1. <code>BEGIN</code> — inicia la transacción</p>
+          <p>2. Inserta el registro en <code>peliculas_actores</code></p>
+          <p>3. <code>COMMIT</code> — confirma si todo salió bien</p>
+          <p>4. <code>ROLLBACK</code> — revierte si hubo error</p>
+          <br>
+          <p>Si el actor ya está asignado a esa película, el servidor responde con error <strong>409</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Crear ────────────────────────────────────── -->
+  <div id="tab-crear" class="seccion">
+    <div class="grid-2">
+
+      <!-- Crear película -->
+      <div class="card card-pelicula">
+        <div class="card-header"><h3>🎬 Nueva película</h3></div>
+        <div class="card-body">
+          <div class="form-grupo">
+            <label>Título *</label>
+            <input type="text" id="p-titulo" placeholder="Ej: El Padrino">
+          </div>
+          <div class="form-grupo">
+            <label>Año *</label>
+            <input type="number" id="p-anio" placeholder="Ej: 1972" min="1888" max="2099">
+          </div>
+          <button class="btn btn-indigo btn-full" id="btn-pelicula" onclick="crearPelicula()">
+            ✅ Crear película
+          </button>
+          <div class="alerta" id="alerta-pelicula"></div>
+        </div>
+      </div>
+
+      <!-- Crear actor -->
+      <div class="card card-actor">
+        <div class="card-header"><h3>🎭 Nuevo actor</h3></div>
+        <div class="card-body">
+          <div class="form-grupo">
+            <label>Nombre *</label>
+            <input type="text" id="a-nombre" placeholder="Ej: Marlon Brando">
+          </div>
+          <div class="form-grupo">
+            <label>Fecha de nacimiento *</label>
+            <input type="date" id="a-fecha">
+          </div>
+          <button class="btn btn-morado btn-full" id="btn-actor" onclick="crearActor()">
+            ✅ Crear actor
+          </button>
+          <div class="alerta" id="alerta-actor"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  function toast(txt, tipo = 'ok') {
+    const el = $('toast');
+    el.textContent = txt;
+    el.className = `toast ${tipo} visible`;
+    setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  function alerta(id, txt, tipo) {
+    const el = $(id);
+    const ic = { ok: '✅', error: '❌', warn: '⚠️' };
+    el.innerHTML = `<span>${ic[tipo]}</span> ${txt}`;
+    el.className = `alerta alerta-${tipo} visible`;
+  }
+
+  // ── Navegación por tabs ───────────────────────────────────────────────
+  function cambiarTab(nombre, btn) {
+    document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activo'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
+    $(`tab-${nombre}`).classList.add('activo');
+    btn.classList.add('activo');
+
+    // Cargar datos según el tab activo
+    if (nombre === 'peliculas') cargarPeliculas();
+    if (nombre === 'actores')   cargarActores();
+    if (nombre === 'asignar')   cargarSelects();
+  }
+
+  // ── GET /peliculas ────────────────────────────────────────────────────
+  async function cargarPeliculas() {
+    $('lista-peliculas').innerHTML = '<div class="loading">Cargando películas...</div>';
+    try {
+      const res  = await fetch('/peliculas');
+      const data = await res.json();
+
+      if (data.length === 0) {
+        $('lista-peliculas').innerHTML = '<div class="empty">No hay películas registradas.</div>';
+        return;
+      }
+
+      $('lista-peliculas').innerHTML = data.map(p => `
+        <div class="card card-pelicula">
+          <div class="card-body">
+            <div class="pelicula-item" style="padding:0; border:none">
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px">
+                <span class="badge-id">#${p.id}</span>
+                <span class="pelicula-titulo">${p.titulo}</span>
+                <span class="pelicula-anio">📅 ${p.anio}</span>
+              </div>
+              <div class="actores-lista">
+                ${p.Actors && p.Actors.length > 0
+                  ? p.Actors.map(a => `<span class="tag-actor">🎭 ${a.nombre}</span>`).join('')
+                  : '<span class="sin-asignados">Sin actores asignados</span>'}
+              </div>
+            </div>
+          </div>
+        </div>`).join('');
+    } catch {
+      $('lista-peliculas').innerHTML = '<div class="empty">Error al conectar con el servidor.</div>';
+    }
+  }
+
+  // ── GET /actores ──────────────────────────────────────────────────────
+  async function cargarActores() {
+    $('lista-actores').innerHTML = '<div class="loading">Cargando actores...</div>';
+    try {
+      const res  = await fetch('/actores');
+      const data = await res.json();
+
+      if (data.length === 0) {
+        $('lista-actores').innerHTML = '<div class="empty">No hay actores registrados.</div>';
+        return;
+      }
+
+      $('lista-actores').innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            ${data.map(a => `
+              <div class="actor-item">
+                <div class="actor-avatar">${a.nombre.charAt(0)}</div>
+                <div class="actor-info">
+                  <strong>${a.nombre}</strong>
+                  <span>🎂 ${a.fecha_nacimiento}</span>
+                  <div class="actores-lista">
+                    ${a.Peliculas && a.Peliculas.length > 0
+                      ? a.Peliculas.map(p => `<span class="tag-pelicula">🎬 ${p.titulo}</span>`).join('')
+                      : '<span class="sin-asignados">Sin películas asignadas</span>'}
+                  </div>
+                </div>
+                <span class="badge-id">#${a.id}</span>
+              </div>`).join('')}
+          </div>
+        </div>`;
+    } catch {
+      $('lista-actores').innerHTML = '<div class="empty">Error al conectar con el servidor.</div>';
+    }
+  }
+
+  // ── Cargar selects para asignar ───────────────────────────────────────
+  async function cargarSelects() {
+    try {
+      const [resPel, resAct] = await Promise.all([
+        fetch('/peliculas'),
+        fetch('/actores')
+      ]);
+      const peliculas = await resPel.json();
+      const actores   = await resAct.json();
+
+      $('sel-pelicula').innerHTML = peliculas.map(p =>
+        `<option value="${p.id}">${p.titulo} (${p.anio})</option>`).join('');
+      $('sel-actor').innerHTML = actores.map(a =>
+        `<option value="${a.id}">${a.nombre}</option>`).join('');
+    } catch {}
+  }
+
+  // ── POST /asignar-actor ───────────────────────────────────────────────
+  async function asignarActor() {
+    const pelicula_id = parseInt($('sel-pelicula').value);
+    const actor_id    = parseInt($('sel-actor').value);
+
+    try {
+      const res  = await fetch('/asignar-actor', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ pelicula_id, actor_id })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alerta('alerta-asignar', data.mensaje, res.status === 409 ? 'warn' : 'error');
+      } else {
+        alerta('alerta-asignar', data.mensaje, 'ok');
+        toast('Actor asignado ✓', 'ok');
+      }
+    } catch {
+      alerta('alerta-asignar', 'Error al conectar con el servidor', 'error');
+    }
+  }
+
+  // ── POST /peliculas ───────────────────────────────────────────────────
+  async function crearPelicula() {
+    const titulo = $('p-titulo').value.trim();
+    const anio   = $('p-anio').value.trim();
+    const btn    = $('btn-pelicula');
+
+    if (!titulo || !anio) { alerta('alerta-pelicula', 'Título y año son obligatorios.', 'error'); return; }
+
+    btn.disabled = true; btn.textContent = '⏳ Creando...';
+    try {
+      const res  = await fetch('/peliculas', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ titulo, anio: parseInt(anio) })
+      });
+      const data = await res.json();
+      if (!res.ok) { alerta('alerta-pelicula', data.mensaje, 'error'); }
+      else {
+        alerta('alerta-pelicula', `Película "${data.titulo}" creada correctamente`, 'ok');
+        toast(`${data.titulo} creada ✓`, 'ok');
+        $('p-titulo').value = $('p-anio').value = '';
+      }
+    } catch {
+      alerta('alerta-pelicula', 'Error al conectar con el servidor', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '✅ Crear película';
+    }
+  }
+
+  // ── POST /actores ─────────────────────────────────────────────────────
+  async function crearActor() {
+    const nombre           = $('a-nombre').value.trim();
+    const fecha_nacimiento = $('a-fecha').value;
+    const btn              = $('btn-actor');
+
+    if (!nombre || !fecha_nacimiento) { alerta('alerta-actor', 'Nombre y fecha son obligatorios.', 'error'); return; }
+
+    btn.disabled = true; btn.textContent = '⏳ Creando...';
+    try {
+      const res  = await fetch('/actores', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ nombre, fecha_nacimiento })
+      });
+      const data = await res.json();
+      if (!res.ok) { alerta('alerta-actor', data.mensaje, 'error'); }
+      else {
+        alerta('alerta-actor', `Actor "${data.nombre}" creado correctamente`, 'ok');
+        toast(`${data.nombre} creado ✓`, 'ok');
+        $('a-nombre').value = $('a-fecha').value = '';
+      }
+    } catch {
+      alerta('alerta-actor', 'Error al conectar con el servidor', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = '✅ Crear actor';
+    }
+  }
+
+  // Cargar al inicio
+  cargarPeliculas();
+</script>
+</body>
+</html>

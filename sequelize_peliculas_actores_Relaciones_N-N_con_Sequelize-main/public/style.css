@@ -1,0 +1,133 @@
+:root {
+  --indigo:      #5c6bc0;
+  --indigo-osc:  #3949ab;
+  --indigo-claro:#e8eaf6;
+  --morado:      #7e57c2;
+  --verde:       #43a047;
+  --rojo:        #e53935;
+  --naranja:     #fb8c00;
+  --gris-fondo:  #f3f4f8;
+  --gris-borde:  #c5cae9;
+  --gris-txt:    #78909c;
+  --negro:       #1a237e;
+  --blanco:      #ffffff;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--gris-fondo); color: #37474f; min-height: 100vh; }
+
+/* ── Header ─────────────────────────────────────────────── */
+header {
+  background: linear-gradient(135deg, var(--indigo-osc), var(--morado));
+  color: white;
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+header h1 { font-size: 1.15rem; font-weight: 800; }
+header p  { font-size: 0.78rem; opacity: 0.8; margin-top: 2px; }
+.header-badge { background: rgba(255,255,255,0.2); padding: 4px 14px; border-radius: 20px; font-size: 0.78rem; }
+
+/* ── Tabs ───────────────────────────────────────────────── */
+.tabs {
+  background: white;
+  border-bottom: 1px solid var(--gris-borde);
+  padding: 0 40px;
+  display: flex;
+  gap: 0;
+}
+.tab {
+  padding: 14px 22px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--gris-txt);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  font-family: inherit;
+}
+.tab:hover  { color: var(--indigo); }
+.tab.activo { color: var(--indigo); border-bottom-color: var(--indigo); }
+
+/* ── Contenido ──────────────────────────────────────────── */
+.contenido { max-width: 1000px; margin: 28px auto; padding: 0 24px; }
+.seccion { display: none; }
+.seccion.activo { display: block; }
+
+/* ── Grid ───────────────────────────────────────────────── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+
+/* ── Card ───────────────────────────────────────────────── */
+.card { background: white; border: 1px solid var(--gris-borde); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+.card-header { padding: 14px 20px; border-bottom: 1px solid var(--gris-borde); display: flex; align-items: center; justify-content: space-between; }
+.card-header h3 { font-size: 0.92rem; font-weight: 700; }
+.card-body { padding: 20px; }
+
+.card-pelicula { border-left: 4px solid var(--indigo); }
+.card-actor    { border-left: 4px solid var(--morado); }
+
+/* ── Formulario ─────────────────────────────────────────── */
+.form-grupo { margin-bottom: 14px; }
+.form-grupo label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--gris-txt); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
+.form-grupo input, .form-grupo select {
+  width: 100%; padding: 9px 12px;
+  border: 1px solid var(--gris-borde); border-radius: 7px;
+  font-size: 0.9rem; font-family: inherit; background: white;
+  transition: border-color 0.2s;
+}
+.form-grupo input:focus, .form-grupo select:focus { outline: none; border-color: var(--indigo); }
+
+/* ── Botones ────────────────────────────────────────────── */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; border-radius: 7px; font-size: 0.88rem; font-weight: 600; border: none; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+.btn-indigo  { background: var(--indigo);  color: white; }
+.btn-indigo:hover  { background: var(--indigo-osc); }
+.btn-morado  { background: var(--morado);  color: white; }
+.btn-morado:hover  { background: #6a1b9a; }
+.btn-verde   { background: var(--verde);   color: white; }
+.btn-verde:hover   { background: #2e7d32; }
+.btn-outline { background: transparent; border: 1px solid var(--gris-borde); color: #37474f; }
+.btn-outline:hover { background: var(--gris-fondo); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-full { width: 100%; justify-content: center; }
+
+/* ── Película item ──────────────────────────────────────── */
+.pelicula-item { padding: 14px 0; border-bottom: 1px solid var(--gris-borde); }
+.pelicula-item:last-child { border-bottom: none; }
+.pelicula-titulo { font-size: 0.95rem; font-weight: 700; color: var(--negro); margin-bottom: 4px; }
+.pelicula-anio   { font-size: 0.78rem; color: var(--gris-txt); margin-bottom: 8px; }
+.actores-lista   { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag-actor { background: var(--indigo-claro); color: var(--indigo-osc); padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
+.tag-pelicula { background: #ede7f6; color: var(--morado); padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
+.sin-asignados { font-size: 0.8rem; color: var(--gris-txt); font-style: italic; }
+
+/* ── Actor item ─────────────────────────────────────────── */
+.actor-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gris-borde); }
+.actor-item:last-child { border-bottom: none; }
+.actor-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--morado); color: white; font-size: 1rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.actor-info strong { display: block; font-size: 0.9rem; font-weight: 700; }
+.actor-info span   { display: block; font-size: 0.78rem; color: var(--gris-txt); margin-bottom: 6px; }
+
+/* ── Alertas ────────────────────────────────────────────── */
+.alerta { padding: 10px 14px; border-radius: 7px; font-size: 0.85rem; display: none; gap: 8px; align-items: center; margin-top: 12px; }
+.alerta.visible { display: flex; }
+.alerta-ok    { background: #e8f5e9; color: var(--verde);  border-left: 3px solid var(--verde); }
+.alerta-error { background: #ffebee; color: var(--rojo);   border-left: 3px solid var(--rojo); }
+.alerta-warn  { background: #fff8e1; color: var(--naranja); border-left: 3px solid var(--naranja); }
+
+/* ── Loading / empty ────────────────────────────────────── */
+.loading, .empty { text-align: center; padding: 30px; color: var(--gris-txt); font-size: 0.88rem; }
+
+/* ── Badge ──────────────────────────────────────────────── */
+.badge-id { background: var(--indigo-claro); color: var(--indigo-osc); padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; font-family: monospace; }
+
+/* ── Toast ──────────────────────────────────────────────── */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--negro); color: white; padding: 12px 20px; border-radius: 8px; font-size: 0.88rem; box-shadow: 0 6px 24px rgba(0,0,0,0.2); transform: translateY(60px); opacity: 0; transition: all 0.3s; z-index: 999; max-width: 360px; }
+.toast.visible { transform: translateY(0); opacity: 1; }
+.toast.ok    { border-left: 3px solid var(--verde); }
+.toast.error { border-left: 3px solid var(--rojo); }

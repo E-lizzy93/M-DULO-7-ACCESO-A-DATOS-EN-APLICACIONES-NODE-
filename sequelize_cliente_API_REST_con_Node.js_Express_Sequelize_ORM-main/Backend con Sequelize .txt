@@ -1,0 +1,17 @@
+ENTREGA MÓDULO 7: ACCESO A DATOS EN APLICACIONES NODE
+
+
+REPOSITORIO GITHUB: 🔗 
+https://github.com/E-lizzy93/M-DULO-7-ACCESO-A-DATOS-EN-APLICACIONES-NODE-.git
+
+Carpeta: /sequelize_cliente_API_REST_con_Node.js_Express_Sequelize_ORM-main
+
+Estructura del Proyecto:
+
+/public: Interfaz de usuario que consume la API REST para interactuar con los datos gestionados por el ORM.
+
+server.js: Servidor principal donde se configura Express y se sincronizan los modelos de Sequelize con la base de datos PostgreSQL.
+
+package.json / package-lock.json: Registro de dependencias, destacando la inclusión de sequelize y el driver de base de datos correspondiente.
+
+README.md: Documentación detallada sobre la configuración del ORM, modelos definidos y rutas de la API.

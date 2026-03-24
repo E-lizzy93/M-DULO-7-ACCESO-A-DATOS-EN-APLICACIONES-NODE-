@@ -1,0 +1,22 @@
+ENTREGA MÓDULO 7: ACCESO A DATOS EN APLICACIONES NODE
+
+Actividad
+Relaciones N–N con Sequelize: Películas, Actores y asignación con transacción
+Introducción / Objetivo
+
+REPOSITORIO GITHUB: 🔗 
+https://github.com/E-lizzy93/M-DULO-7-ACCESO-A-DATOS-EN-APLICACIONES-NODE-.git
+
+Carpeta: /sequelize_peliculas_actores_Relaciones_N-N_con_Sequelize-main
+
+Estructura del Proyecto:
+
+/public: Interfaz de usuario para visualizar las relaciones entre el catálogo de películas y el elenco de actores.
+
+server.js: Servidor donde se definen las asociaciones de Sequelize (belongsToMany) y se gestiona la tabla intermedia (junction table) de forma automática.
+
+package.json / package-lock.json: Archivos con las dependencias del proyecto (Sequelize, Express, PG).
+
+README.md: Explicación técnica de cómo se implementaron las relaciones y cómo ejecutar la migración/sincronización de la base de datos.
+
+

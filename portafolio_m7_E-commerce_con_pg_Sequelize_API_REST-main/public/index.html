@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portafolio M7 — Mi Tienda</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav>
+  <span class="nav-brand">🛍 Mi Tienda</span>
+  <div class="nav-links">
+    <button class="activo" onclick="cambiarSeccion('productos', this)">Productos</button>
+    <button onclick="cambiarSeccion('carrito', this)">
+      Carrito <span class="carrito-badge" id="carrito-count">0</span>
+    </button>
+    <button onclick="cambiarSeccion('ventas', this)">Ventas</button>
+    <button onclick="cambiarSeccion('admin', this)">Administrar</button>
+  </div>
+</nav>
+
+<div class="contenedor">
+
+  <!-- ── Productos ─────────────────────────────────────── -->
+  <div id="sec-productos" class="seccion activo">
+    <div class="sec-header">
+      <div>
+        <h2>Catálogo de productos</h2>
+        <p>GET /productos — datos desde PostgreSQL vía Sequelize</p>
+      </div>
+      <button class="btn btn-ghost" onclick="cargarProductos()">🔄 Recargar</button>
+    </div>
+    <div id="grid-productos"><div class="loading">Cargando productos...</div></div>
+  </div>
+
+  <!-- ── Carrito ──────────────────────────────────────── -->
+  <div id="sec-carrito" class="seccion">
+    <div class="sec-header">
+      <div>
+        <h2>Carrito de compras</h2>
+        <p>POST /venta — transacción BEGIN/COMMIT/ROLLBACK con pg</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-titulo">Carrito de compras</div>
+      <div id="carrito-contenido"></div>
+      <div id="resumen-carrito" style="display:none">
+        <div class="resumen-box">
+          <div class="resumen-fila"><span>Subtotal (neto)</span><span id="res-subtotal">$0</span></div>
+          <div class="resumen-fila"><span>IVA (19%)</span><span id="res-iva">$0</span></div>
+          <div class="resumen-fila total"><span>Total</span><span id="res-total">$0</span></div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-top:16px">
+          <button class="btn btn-verde" id="btn-comprar" onclick="comprar()">🛒 Comprar ahora</button>
+        </div>
+      </div>
+      <div class="alerta" id="alerta-carrito"></div>
+    </div>
+    <div id="confirmacion"></div>
+  </div>
+
+  <!-- ── Ventas ────────────────────────────────────────── -->
+  <div id="sec-ventas" class="seccion">
+    <div class="sec-header">
+      <div>
+        <h2>Historial de ventas</h2>
+        <p>GET /ventas — datos desde PostgreSQL vía Sequelize</p>
+      </div>
+      <button class="btn btn-ghost" onclick="cargarVentas()">🔄 Recargar</button>
+    </div>
+    <div id="tabla-ventas"><div class="loading">Cargando ventas...</div></div>
+  </div>
+
+  <!-- ── Admin ─────────────────────────────────────────── -->
+  <div id="sec-admin" class="seccion">
+    <div class="sec-header"><div><h2>Administrar productos</h2></div></div>
+
+    <!-- Crear -->
+    <div class="panel">
+      <div class="panel-titulo">➕ Crear nuevo producto — POST /producto</div>
+      <div class="form-grid-3">
+        <div class="form-grupo">
+          <label>Nombre *</label>
+          <input type="text" id="c-nombre" placeholder="Ej: Auriculares HD">
+        </div>
+        <div class="form-grupo">
+          <label>Precio *</label>
+          <input type="number" id="c-precio" placeholder="Ej: 29990" min="0">
+        </div>
+        <div class="form-grupo">
+          <label>Stock inicial</label>
+          <input type="number" id="c-stock" placeholder="Ej: 10" min="0" value="0">
+        </div>
+      </div>
+      <div class="form-acciones">
+        <button class="btn btn-verde" id="btn-crear" onclick="crearProducto()">✅ Crear producto</button>
+      </div>
+      <div class="alerta" id="alerta-crear"></div>
+    </div>
+
+    <!-- Editar -->
+    <div class="panel">
+      <div class="panel-titulo">✏️ Editar producto — PUT /producto</div>
+      <div class="form-grid">
+        <div class="form-grupo">
+          <label>Producto a editar</label>
+          <select id="e-id"></select>
+        </div>
+        <div class="form-grupo">
+          <label>Nuevo nombre</label>
+          <input type="text" id="e-nombre" placeholder="Dejar vacío para no cambiar">
+        </div>
+        <div class="form-grupo">
+          <label>Nuevo precio</label>
+          <input type="number" id="e-precio" placeholder="Dejar vacío para no cambiar" min="0">
+        </div>
+        <div class="form-grupo">
+          <label>Nuevo stock</label>
+          <input type="number" id="e-stock" placeholder="Dejar vacío para no cambiar" min="0">
+        </div>
+      </div>
+      <div class="form-acciones">
+        <button class="btn btn-primario" id="btn-editar" onclick="editarProducto()">💾 Guardar cambios</button>
+      </div>
+      <div class="alerta" id="alerta-editar"></div>
+    </div>
+
+    <!-- Eliminar -->
+    <div class="panel">
+      <div class="panel-titulo">🗑 Eliminar producto — DELETE /producto</div>
+      <div style="max-width:400px">
+        <div class="form-grupo">
+          <label>Producto a eliminar</label>
+          <select id="d-id"></select>
+        </div>
+      </div>
+      <div class="form-acciones">
+        <button class="btn btn-rojo" id="btn-eliminar" onclick="eliminarProducto()">🗑 Eliminar</button>
+      </div>
+      <div class="alerta" id="alerta-eliminar"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  let carrito = [];
+  let productosCache = [];
+
+  // ── Helpers ───────────────────────────────────────────────────────────
+  function toast(txt, tipo = 'ok') {
+    const el = $('toast');
+    el.textContent = txt;
+    el.className = `toast ${tipo} visible`;
+    setTimeout(() => el.classList.remove('visible'), 3500);
+  }
+
+  function mostrarAlerta(id, txt, tipo) {
+    const el = $(id);
+    const ic = { ok: '✅', error: '❌', warn: '⚠️' };
+    el.innerHTML = `<span>${ic[tipo]}</span><div>${txt}</div>`;
+    el.className = `alerta alerta-${tipo} visible`;
+  }
+
+  function limpiarAlertas() {
+    document.querySelectorAll('.alerta').forEach(a => a.className = 'alerta');
+    $('confirmacion').innerHTML = '';
+  }
+
+  function formatPesos(n) {
+    return '$' + Math.round(Number(n)).toLocaleString('es-CL');
+  }
+
+  // En Chile los precios incluyen IVA
+  // neto = round(total / 1.19), iva = total - neto
+  function calcularIVA(totalConIva) {
+    const total = Math.round(totalConIva);
+    const neto  = Math.round(total / 1.19);
+    const iva   = total - neto;
+    return { neto, iva, total };
+  }
+
+  function iconoProducto(nombre) {
+    const n = nombre.toLowerCase();
+    if (n.includes('teclado'))  return '⌨️';
+    if (n.includes('mouse'))    return '🖱️';
+    if (n.includes('monitor'))  return '🖥️';
+    if (n.includes('audí') || n.includes('auri')) return '🎧';
+    if (n.includes('webcam'))   return '📷';
+    if (n.includes('hub') || n.includes('usb')) return '🔌';
+    return '📦';
+  }
+
+  // ── Navegación ────────────────────────────────────────────────────────
+  function cambiarSeccion(nombre, btn) {
+    limpiarAlertas();
+    document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activo'));
+    document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('activo'));
+    $(`sec-${nombre}`).classList.add('activo');
+    btn.classList.add('activo');
+    if (nombre === 'productos') cargarProductos();
+    if (nombre === 'carrito')   renderCarrito();
+    if (nombre === 'ventas')    cargarVentas();
+    if (nombre === 'admin')     { cargarProductos(); cargarSelectsAdmin(); }
+  }
+
+  // ── GET /productos ────────────────────────────────────────────────────
+  async function cargarProductos() {
+    $('grid-productos').innerHTML = '<div class="loading">Cargando...</div>';
+    try {
+      const res  = await fetch('/productos');
+      const data = await res.json();
+      productosCache = data;
+      if (data.length === 0) {
+        $('grid-productos').innerHTML = '<div class="loading">No hay productos.</div>';
+        return;
+      }
+      $('grid-productos').innerHTML = `
+        <div class="productos-grid">
+          ${data.map(p => {
+            const stock   = p.Inventario?.stock ?? p.stock ?? 0;
+            const sinStock = stock === 0;
+            return `
+              <div class="producto-card">
+                <div class="producto-img">${iconoProducto(p.nombre)}</div>
+                <div class="producto-body">
+                  <div class="producto-nombre">${p.nombre}</div>
+                  <div class="producto-precio">${formatPesos(p.precio)}</div>
+                  <div class="producto-stock ${stock <= 3 && !sinStock ? 'stock-bajo' : ''}">
+                    Stock: ${sinStock ? '<span class="stock-bajo">Sin stock</span>' : stock}
+                  </div>
+                  <button class="btn-carrito"
+                    onclick="agregarAlCarrito(${p.id_producto},'${p.nombre.replace(/'/g,"\\'")}',${p.precio},${stock})"
+                    ${sinStock ? 'disabled' : ''}>
+                    ${sinStock ? 'Sin stock' : '🛒 Agregar al carrito'}
+                  </button>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>`;
+    } catch {
+      $('grid-productos').innerHTML = '<div class="loading">Error al cargar productos.</div>';
+    }
+  }
+
+  // ── Carrito ───────────────────────────────────────────────────────────
+  function agregarAlCarrito(id, nombre, precio, stock) {
+    const existente = carrito.find(i => i.id_producto === id);
+    if (existente) {
+      if (existente.cantidad < stock) existente.cantidad++;
+      else { toast(`Stock máximo: ${stock}`, 'error'); return; }
+    } else {
+      carrito.push({ id_producto: id, nombre, precio_unit: precio, cantidad: 1, stock });
+    }
+    actualizarBadge();
+    toast(`${nombre} agregado ✓`, 'ok');
+  }
+
+  function actualizarBadge() {
+    $('carrito-count').textContent = carrito.reduce((s, i) => s + i.cantidad, 0);
+  }
+
+  function renderCarrito() {
+    if (carrito.length === 0) {
+      $('carrito-contenido').innerHTML = '<div class="carrito-vacio">🛒 Tu carrito está vacío.<br><small>Agrega productos desde el catálogo.</small></div>';
+      $('resumen-carrito').style.display = 'none';
+      return;
+    }
+
+    // Los precios incluyen IVA — calcular neto e IVA del total
+    let totalBruto = 0;
+    $('carrito-contenido').innerHTML = `
+      <table class="carrito-tabla">
+        <thead>
+          <tr><th>Producto</th><th>Precio unit.</th><th>Cantidad</th><th>Subtotal</th><th></th></tr>
+        </thead>
+        <tbody>
+          ${carrito.map(item => {
+            const sub = item.precio_unit * item.cantidad;
+            totalBruto += sub;
+            return `
+              <tr>
+                <td><strong>${item.nombre}</strong></td>
+                <td>${formatPesos(item.precio_unit)}</td>
+                <td>
+                  <input type="number" class="qty-input" value="${item.cantidad}" min="1" max="${item.stock}"
+                    onchange="actualizarCantidad(${item.id_producto}, this.value)">
+                </td>
+                <td>${formatPesos(sub)}</td>
+                <td>
+                  <button class="btn btn-rojo" style="padding:4px 10px;font-size:0.78rem"
+                    onclick="quitarDelCarrito(${item.id_producto})">✕</button>
+                </td>
+              </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+
+    const { neto, iva, total } = calcularIVA(totalBruto);
+    $('res-subtotal').textContent = formatPesos(neto);
+    $('res-iva').textContent      = formatPesos(iva);
+    $('res-total').textContent    = formatPesos(total);
+    $('resumen-carrito').style.display = 'block';
+  }
+
+  function actualizarCantidad(id, val) {
+    const item = carrito.find(i => i.id_producto === id);
+    if (item) item.cantidad = Math.max(1, parseInt(val) || 1);
+    actualizarBadge();
+    renderCarrito();
+  }
+
+  function quitarDelCarrito(id) {
+    carrito = carrito.filter(i => i.id_producto !== id);
+    actualizarBadge();
+    renderCarrito();
+  }
+
+  // ── POST /venta ───────────────────────────────────────────────────────
+  async function comprar() {
+    const btn = $('btn-comprar');
+    btn.disabled = true;
+    btn.textContent = '⏳ Procesando...';
+
+    try {
+      const res  = await fetch('/ventas', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          id_usuario: 1,
+          items: carrito.map(i => ({
+            id_producto: i.id_producto,
+            cantidad:    i.cantidad,
+            precio_unit: i.precio_unit
+          }))
+        })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        mostrarAlerta('alerta-carrito', data.error, res.status === 409 ? 'warn' : 'error');
+        $('confirmacion').innerHTML = `
+          <div class="rollback-box">
+            <h3>❌ ROLLBACK — Compra no registrada</h3>
+            <p>${data.error}</p>
+            <p style="font-size:0.82rem;margin-top:6px;opacity:0.8">
+              La transacción fue revertida. El stock no fue modificado.
+            </p>
+          </div>`;
+        toast(data.error, 'error');
+      } else {
+        // Calcular IVA para la confirmación
+        const totalBruto = carrito.reduce((s, i) => s + i.precio_unit * i.cantidad, 0);
+        const { neto, iva, total } = calcularIVA(totalBruto);
+
+        $('confirmacion').innerHTML = `
+          <div class="confirmacion-box">
+            <h3>✅ Compra registrada — Éxito (201)</h3>
+            <p>ID de venta: <strong>#${data.id_venta}</strong></p>
+            <p>Fecha: ${new Date(data.fecha).toLocaleString('es-CL')}</p>
+          </div>
+          <div class="panel">
+            <div class="panel-titulo">Detalle de la venta</div>
+            <table>
+              <thead>
+                <tr><th>Producto</th><th>Cantidad</th><th class="num">Precio unit.</th><th class="num">Subtotal</th></tr>
+              </thead>
+              <tbody>
+                ${carrito.map(i => `
+                  <tr>
+                    <td>${i.nombre}</td>
+                    <td>${i.cantidad}</td>
+                    <td class="num">${formatPesos(i.precio_unit)}</td>
+                    <td class="num">${formatPesos(i.precio_unit * i.cantidad)}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+            <div class="resumen-box" style="margin-top:16px">
+              <div class="resumen-fila"><span>Subtotal (neto)</span><span>${formatPesos(neto)}</span></div>
+              <div class="resumen-fila"><span>IVA (19%)</span><span>${formatPesos(iva)}</span></div>
+              <div class="resumen-fila total"><span>Total</span><span>${formatPesos(total)}</span></div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:16px">
+              <button class="btn btn-primario" onclick="volverAProductos()">← Volver a productos</button>
+            </div>
+          </div>`;
+
+        carrito = [];
+        actualizarBadge();
+        $('carrito-contenido').innerHTML = '';
+        $('resumen-carrito').style.display = 'none';
+        toast('Compra registrada correctamente ✓', 'ok');
+      }
+    } catch {
+      mostrarAlerta('alerta-carrito', 'Error al conectar con el servidor', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🛒 Comprar ahora';
+    }
+  }
+
+  function volverAProductos() {
+    limpiarAlertas();
+    document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activo'));
+    document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('activo'));
+    $('sec-productos').classList.add('activo');
+    document.querySelectorAll('.nav-links button')[0].classList.add('activo');
+    cargarProductos();
+  }
+
+  // ── GET /ventas ───────────────────────────────────────────────────────
+  async function cargarVentas() {
+    $('tabla-ventas').innerHTML = '<div class="loading">Cargando ventas...</div>';
+    try {
+      const res  = await fetch('/ventas');
+      const data = await res.json();
+      if (data.length === 0) {
+        $('tabla-ventas').innerHTML = '<div class="loading">No hay ventas registradas.</div>';
+        return;
+      }
+      $('tabla-ventas').innerHTML = `
+        <div class="panel">
+          <div class="panel-titulo">Historial de ventas</div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID Venta</th><th>Fecha</th>
+                <th class="num">Items</th><th class="num">Subtotal</th>
+                <th class="num">IVA</th><th class="num">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map(v => {
+                const { neto, iva, total } = calcularIVA(v.subtotal);
+                return `
+                  <tr>
+                    <td><span class="badge-id">#${v.id_venta}</span></td>
+                    <td>${new Date(v.fecha).toLocaleString('es-CL')}</td>
+                    <td class="num">${v.items}</td>
+                    <td class="num">${formatPesos(neto)}</td>
+                    <td class="num">${formatPesos(iva)}</td>
+                    <td class="num"><strong>${formatPesos(total)}</strong></td>
+                  </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    } catch {
+      $('tabla-ventas').innerHTML = '<div class="loading">Error al cargar ventas.</div>';
+    }
+  }
+
+  // ── Admin ─────────────────────────────────────────────────────────────
+  function cargarSelectsAdmin() {
+    const opts = productosCache.map(p =>
+      `<option value="${p.id_producto}">${p.nombre} — ${formatPesos(p.precio)}</option>`
+    ).join('');
+    $('e-id').innerHTML = opts;
+    $('d-id').innerHTML = opts;
+  }
+
+  async function crearProducto() {
+    const nombre = $('c-nombre').value.trim();
+    const precio = $('c-precio').value;
+    const stock  = $('c-stock').value || 0;
+    const btn    = $('btn-crear');
+    if (!nombre || !precio) { mostrarAlerta('alerta-crear', 'Nombre y precio son obligatorios.', 'error'); return; }
+    btn.disabled = true; btn.textContent = '⏳ Creando...';
+    try {
+      const res  = await fetch('/productos', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, precio, stock })
+      });
+      const data = await res.json();
+      if (!res.ok) { mostrarAlerta('alerta-crear', data.error, 'error'); }
+      else {
+        mostrarAlerta('alerta-crear', `Producto "${data.nombre}" creado correctamente`, 'ok');
+        toast(`${data.nombre} creado ✓`, 'ok');
+        $('c-nombre').value = $('c-precio').value = '';
+        $('c-stock').value = 0;
+        cargarProductos();
+      }
+    } catch { mostrarAlerta('alerta-crear', 'Error al conectar', 'error'); }
+    finally { btn.disabled = false; btn.textContent = '✅ Crear producto'; }
+  }
+
+  async function editarProducto() {
+    const id_producto = parseInt($('e-id').value);
+    const nombre = $('e-nombre').value.trim() || undefined;
+    const precio = $('e-precio').value || undefined;
+    const stock  = $('e-stock').value  || undefined;
+    const btn    = $('btn-editar');
+    btn.disabled = true; btn.textContent = '⏳ Guardando...';
+    try {
+      const res  = await fetch('/productos', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_producto, nombre, precio, stock })
+      });
+      const data = await res.json();
+      if (!res.ok) { mostrarAlerta('alerta-editar', data.error, 'error'); }
+      else {
+        mostrarAlerta('alerta-editar', data.mensaje, 'ok');
+        toast('Producto actualizado ✓', 'ok');
+        $('e-nombre').value = $('e-precio').value = $('e-stock').value = '';
+        cargarProductos();
+      }
+    } catch { mostrarAlerta('alerta-editar', 'Error al conectar', 'error'); }
+    finally { btn.disabled = false; btn.textContent = '💾 Guardar cambios'; }
+  }
+
+  async function eliminarProducto() {
+    const id_producto = $('d-id').value;
+    const btn = $('btn-eliminar');
+    if (!confirm('¿Eliminar este producto?')) return;
+    btn.disabled = true; btn.textContent = '⏳ Eliminando...';
+    try {
+      const res  = await fetch(`/productos?id_producto=${id_producto}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) { mostrarAlerta('alerta-eliminar', data.error, 'error'); }
+      else {
+        mostrarAlerta('alerta-eliminar', data.mensaje, 'ok');
+        toast('Producto eliminado ✓', 'ok');
+        cargarProductos();
+        cargarSelectsAdmin();
+      }
+    } catch { mostrarAlerta('alerta-eliminar', 'Error al conectar', 'error'); }
+    finally { btn.disabled = false; btn.textContent = '🗑 Eliminar'; }
+  }
+
+  cargarProductos();
+</script>
+</body>
+</html>

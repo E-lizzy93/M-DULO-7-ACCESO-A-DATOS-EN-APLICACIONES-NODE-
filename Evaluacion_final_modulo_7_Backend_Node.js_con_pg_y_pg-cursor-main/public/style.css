@@ -1,0 +1,119 @@
+:root {
+  --azul:      #1e3a5f;
+  --azul-med:  #2d5986;
+  --azul-claro:#e8f0fe;
+  --acento:    #4fc3f7;
+  --verde:     #2e7d32;
+  --rojo:      #c62828;
+  --amarillo:  #f57f17;
+  --fondo:     #f0f4f8;
+  --borde:     #cfd8dc;
+  --txt:       #263238;
+  --txt-dim:   #607d8b;
+  --blanco:    #ffffff;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--fondo); color: var(--txt); min-height: 100vh; }
+
+/* ── Header ─────────────────────────────────────────────── */
+header {
+  background: var(--azul);
+  color: white;
+  padding: 0 40px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+header h1 { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.header-nav { display: flex; gap: 4px; }
+.header-nav button {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.8);
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.header-nav button:hover, .header-nav button.activo {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border-color: rgba(255,255,255,0.6);
+}
+
+/* ── Layout ─────────────────────────────────────────────── */
+.contenedor { max-width: 1100px; margin: 28px auto; padding: 0 24px; }
+.seccion { display: none; }
+.seccion.activo { display: block; }
+
+/* ── Panel ──────────────────────────────────────────────── */
+.panel { background: var(--blanco); border: 1px solid var(--borde); border-radius: 10px; padding: 22px; margin-bottom: 18px; }
+.panel-titulo { font-size: 0.88rem; font-weight: 700; color: var(--txt-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--borde); }
+
+/* ── Controles paginación ───────────────────────────────── */
+.controles { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.controles label { font-size: 0.82rem; color: var(--txt-dim); font-weight: 600; }
+.controles select { padding: 6px 12px; border: 1px solid var(--borde); border-radius: 6px; font-size: 0.88rem; font-family: inherit; background: white; }
+.paginacion { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.paginacion span { font-size: 0.82rem; color: var(--txt-dim); }
+
+/* ── Tabla ──────────────────────────────────────────────── */
+.tabla-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+thead tr { background: var(--azul); color: white; }
+th { padding: 10px 14px; text-align: left; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--borde); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--azul-claro); }
+.tag-continente { padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+.tag-europa  { background: #e3f2fd; color: #1565c0; }
+.tag-america { background: #e8f5e9; color: #2e7d32; }
+.tag-asia    { background: #fff8e1; color: #f57f17; }
+.tag-africa  { background: #fce4ec; color: #c62828; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.nombre-pais { font-weight: 700; color: var(--azul); }
+
+/* ── Formulario ─────────────────────────────────────────── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.form-grupo { display: flex; flex-direction: column; gap: 5px; }
+.form-grupo label { font-size: 0.75rem; font-weight: 700; color: var(--txt-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+.form-grupo input, .form-grupo select { padding: 9px 12px; border: 1px solid var(--borde); border-radius: 7px; font-size: 0.9rem; font-family: inherit; transition: border-color 0.2s; width: 100%; }
+.form-grupo input:focus { outline: none; border-color: var(--azul-med); }
+.form-acciones { margin-top: 16px; display: flex; gap: 10px; }
+
+/* ── Botones ────────────────────────────────────────────── */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; border-radius: 7px; font-size: 0.88rem; font-weight: 600; border: none; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+.btn-azul   { background: var(--azul-med); color: white; }
+.btn-azul:hover   { background: var(--azul); }
+.btn-verde  { background: var(--verde);    color: white; }
+.btn-verde:hover  { background: #1b5e20; }
+.btn-rojo   { background: var(--rojo);     color: white; }
+.btn-rojo:hover   { background: #b71c1c; }
+.btn-ghost  { background: transparent; border: 1px solid var(--borde); color: var(--txt); }
+.btn-ghost:hover  { background: var(--fondo); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Alertas ────────────────────────────────────────────── */
+.alerta { padding: 11px 16px; border-radius: 8px; font-size: 0.88rem; display: none; gap: 10px; align-items: flex-start; margin-top: 14px; }
+.alerta.visible { display: flex; }
+.alerta-ok    { background: #e8f5e9; color: var(--verde);  border-left: 3px solid var(--verde); }
+.alerta-error { background: #ffebee; color: var(--rojo);   border-left: 3px solid var(--rojo); }
+.alerta-warn  { background: #fff8e1; color: var(--amarillo); border-left: 3px solid var(--amarillo); }
+
+/* ── Info box ───────────────────────────────────────────── */
+.info-box { background: var(--azul-claro); border: 1px solid #90caf9; border-radius: 7px; padding: 9px 14px; font-size: 0.83rem; color: var(--azul); margin-bottom: 14px; }
+
+/* ── Loading ────────────────────────────────────────────── */
+.loading { text-align: center; padding: 40px; color: var(--txt-dim); }
+
+/* ── Toast ──────────────────────────────────────────────── */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--azul); color: white; padding: 12px 20px; border-radius: 8px; font-size: 0.88rem; box-shadow: 0 6px 24px rgba(0,0,0,0.2); transform: translateY(60px); opacity: 0; transition: all 0.3s; z-index: 999; max-width: 360px; }
+.toast.visible { transform: translateY(0); opacity: 1; }
+.toast.ok    { border-left: 3px solid var(--verde); }
+.toast.error { border-left: 3px solid var(--rojo); }

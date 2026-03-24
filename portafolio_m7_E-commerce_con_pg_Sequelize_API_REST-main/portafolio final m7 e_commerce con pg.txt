@@ -1,0 +1,21 @@
+ENTREGA MÓDULO 7: ACCESO A DATOS EN APLICACIONES NODE
+
+ Desarrollo Portafolio Módulo 7 : Acceso a datos en Node con PostgreSQL (pg + Sequelize), DML/TCL y API REST
+
+REPOSITORIO GITHUB: 🔗 
+https://github.com/E-lizzy93/M-DULO-7-ACCESO-A-DATOS-EN-APLICACIONES-NODE-.git
+
+
+Carpeta: /portafolio_m7_E-commerce_con_pg_Sequelize_API_REST-main
+
+Estructura del Proyecto:
+
+/src: Carpeta principal que contiene la lógica del servidor, incluyendo la definición de modelos de Sequelize y los controladores de la API.
+
+/scripts: Archivos SQL para la creación inicial de la base de datos y carga de productos/categorías.
+
+/public: Frontend dinámico que permite navegar por la tienda, ver productos y realizar el proceso de compra.
+
+server.js: Punto de entrada que inicializa la conexión con PostgreSQL y levanta el servidor de Express.
+
+package.json: Configuración de todas las dependencias críticas (Sequelize, PG, Express) y los scripts necesarios para correr el portafolio.
